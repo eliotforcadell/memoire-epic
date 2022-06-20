@@ -1,0 +1,152 @@
+---
+site: bookdown::bookdown_site
+documentclass: report
+
+output:
+  bookdown::pdf_book:
+    latex_engine: lualatex
+    toc: false
+    
+mainfont: "Times New Roman"
+fontsize: 12pt
+geometry: "left=2.54cm,right=2.54cm,top=2.5cm,bottom=2.54cm"
+
+bibliography: Bibliographie/biblio.bib
+csl: Bibliographie/le-tapuscrit-author-date.csl
+link-citations: yes
+
+header-includes:
+  - \usepackage[french]{babel}
+  - \addto\captionsfrench{\renewcommand{\listfigurename}{Liste des figures}}
+  - \usepackage[autostyle=true]{csquotes}
+  - \addto\captionsfrench{\renewcommand{\tablename}{Tableau}}
+  - \usepackage{setspace}
+  - \setlength{\parindent}{0em}
+  - \setlength{\parskip}{1em}
+  - \usepackage{enumitem}
+  - \usepackage{float}
+  - \usepackage{geometry}
+  - \usepackage{pdflscape}
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{threeparttable}
+  - \makeatletter\patchcmd{\@makechapterhead}{\vskip 20}{\vskip -10}{}{}\makeatother
+  - \appto\TPTnoteSettings{\linespread{1}\footnotesize}
+  - \usepackage{threeparttablex}
+  - \usepackage{multirow}
+  - \usepackage{array}
+  - \usepackage{siunitx}
+  - \sisetup{output-decimal-marker={,}, table-number-alignment=center, table-text-alignment=center, table-align-text-pre = false, table-align-text-post = false,detect-weight}
+  - \newcolumntype{d}{S[table-format=1.2]}
+  - \usepackage[width=0.90\textwidth]{caption}
+  - \usepackage[nobottomtitles*]{titlesec}
+  - \usepackage{tocbibind}
+  - \usepackage[all]{nowidow}
+  - \renewcommand{\topfraction}{.85}
+  - \renewcommand{\bottomfraction}{.7}
+  - \renewcommand{\textfraction}{.15}
+  - \renewcommand{\floatpagefraction}{.66}
+  - \setcounter{topnumber}{3}
+  - \setcounter{bottomnumber}{3}
+  - \setcounter{totalnumber}{4}
+  - \usepackage[title,titletoc]{appendix}
+  - \usepackage{graphicx}
+  - \usepackage{tcolorbox}
+  - \newcommand{\hideFromPandoc}[1]{#1}
+         \hideFromPandoc{
+             \let\Begin\begin
+             \let\End\end} # Prise en compte des commandes markdown dans un environment latex
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      fig.align = 'center')
+
+source("import_epic.R")
+
+# On écarte les enquêté·es supposé·es non-hétérosexuel·les
+ids_ecart <- histoire[sexer == h_sexec | h_sexec == 9, unique(ident_men)]
+repondant <- repondant[!(ident_men %in% ids_ecart)][, pond := pond/mean(pond)]
+histoire <- histoire[!(ident_men %in% ids_ecart)
+                     ][repondant, pond := i.pond, on = "ident_men"]
+```
+
+\thispagestyle{empty}
+
+\minipage{0.5\textwidth}
+	\center
+	\scriptsize\scshape École des Hautes Études en Sciences Sociales
+\endminipage
+\minipage{0.5\textwidth}
+	\center
+	\scriptsize\scshape École Normale Supérieure
+\endminipage
+\vspace{-0.5cm}
+\begin{figure}[ht]
+	\minipage{0.5\textwidth}
+		\center
+		\includegraphics[height=2cm]{Logos/Logo_EHESS}
+	\endminipage
+	\minipage{0.5\textwidth}
+		\center
+		\includegraphics[height=2cm]{Logos/Logo_ENS-PSL}
+	\endminipage
+\end{figure}
+
+\vspace{-0.25cm}
+
+\begin{center}
+
+Master Sciences sociales - Parcours Quantifier en sciences sociales\\
+2021-2022
+
+\vspace{1cm}
+
+MÉMOIRE DE RECHERCHE
+
+\vspace{2cm}
+
+{\Large Un homme plus grand, une femme plus jeune :}\\
+\vspace{0.05cm}
+{\large Structuration sociale et biographique\\des goûts amoureux hétérosexuels}
+
+\vspace{2.5cm}
+
+{\large Soutenu par\\
+Eliot Forcadell}
+
+\vspace{1cm}
+
+Session\\
+Juin 2022
+
+\vspace{0.25cm}
+
+Directrice\\
+Florence Maillochon
+
+\vspace{0.25cm}
+
+Rapporteur\\
+Wilfried Rault
+
+
+\end{center}
+
+\onehalfspacing
+
+
+\chapter*{Remerciements}\addcontentsline{toc}{chapter}{Remerciements}
+
+Je tiens à remercier tout particulièrement Florence Maillochon pour sa disponibilité, sa bienveillance, ses conseils et ses nombreuses relectures tout au long de ce travail.
+
+Je remercie également Bénédicte Garnier pour m'avoir accompagné dans le traitement de mes données textuelles, Marie Plessz pour ses retours toujours précieux lors de nos « ateliers mémoire », et Wilfried Rault pour avoir accepté d'être rapporteur de ce mémoire.
+
+Merci enfin à mes camarades de promotion pour leurs conseils avisés et leur soutien.
+
+
+\newpage
+
+\singlespacing
+\tableofcontents
+\onehalfspacing

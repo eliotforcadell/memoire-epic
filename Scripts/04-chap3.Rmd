@@ -1,0 +1,369 @@
+```{r import-corpus}
+fpath <- "~/Desktop/M2/Mémoire/"
+
+## Empilement des réponses et des dictionnaires
+dt_plu_all <- lapply(1:2, 
+                     function(i) fread(paste0(fpath, "Data/plu", i, "_corr.csv"),
+                                       integer64 = "character"
+                     )[, variable := paste0("h_plu", i)]) %>% 
+  rbindlist() %>%
+  rbind(fread(paste0(fpath, "Data/plu39_corr.csv"), integer64 = "character"))
+dt_plu_all[, h_nrel_corr := as.integer(gsub("h_plu", "", variable))]
+
+dict_all <- lapply(c(1:2, 39), 
+                   function(i) fread(paste0(fpath, "Data/dict_plu", i, "_corr.csv")
+                   )[, Occurrences := NULL]) %>%
+  rbindlist %>% unique %>%
+  rbind(list(Word = "nonréponse", Lemme = "nonréponse", Stopword = "", Cat_gram = ""))
+dict <- dict_all[Stopword == ""]
+
+repondant[fread(paste0(fpath, "Data/clust.csv"), integer64 = "character"), 
+          clust := i.clust, on = "ident_men"]
+
+
+# Corpus entier
+dt_plu <- merge(histoire[, .(ident_men, h_nrel_corr)], dt_plu_all,
+                by = c("ident_men", "h_nrel_corr"), all.x = T)
+dt_plu[text == "", text := "nonréponse"]
+
+corpus <- VCorpus(
+  DataframeSource(dt_plu[, .(doc_id = paste(ident_men, h_nrel_corr, sep = "_"), text)]),
+  readerControl = list(language = "fr"))
+meta(corpus, type = "corpus", tag = "language") <- "fr"
+
+
+dtm_all <- build_dtm(corpus, remove_numbers = F)
+dtm <- combine_terms(dtm_all[, dict[Word %in% colnames(dtm_all), Word]], 
+                     data.frame(Term = dict[Word %in% colnames(dtm_all), Lemme], 
+                                row.names = dict[Word %in% colnames(dtm_all), Word]))
+
+meta(corpus, "ident_men") <- gsub("_[1-9]", "", names(corpus))
+meta(corpus, "h_nrel_corr") <- as.integer(gsub("(.*)?_([1-9])", "\\2", 
+                                               names(corpus)))
+
+# Corpus individus
+dt_plu_ind <- dt_plu[, .(text = paste(text, collapse = " ")), by = ident_men]
+
+corpus_ind <- VCorpus(
+  DataframeSource(dt_plu_ind[, .(doc_id = ident_men, text)]),
+  readerControl = list(language = "fr"))
+meta(corpus_ind, type = "corpus", tag = "language") <- "fr"
+
+dict_temp <- copy(dict_all)[Lemme %in% c("homme", "garçon",
+                                         "femme", "fille"), 
+                            Stopword := "Stopword"][Stopword != "Stopword"]
+
+dtm_ind_all <- build_dtm(corpus_ind, remove_numbers = F)
+dtm_ind <- combine_terms(
+  dtm_ind_all[, dict_temp[Word %in% colnames(dtm_ind_all), Word]], 
+  data.frame(Term = dict_temp[Word %in% colnames(dtm_ind_all), Lemme], 
+             row.names = dict_temp[Word %in% colnames(dtm_ind_all), Word]))
+
+dtm_ind <- dtm_ind > 0
+
+repondant[as.data.table(as.matrix(dtm_ind), keep.rownames = "ident_men"),
+          c(colnames(dtm_ind)) := mget(colnames(dtm_ind)), on = "ident_men"]
+```
+
+\chapter{Ce qui a plu en début de relation}
+
+
+Les chapitres précédents ont montré que l'interrogation des goûts à l'aide d'une mise en situation fictive (« Accepteriez-vous d'être avec quelqu'un de... ») ne parlait pas à tout le monde de la même manière, et engendrait notamment des biais probables de déclaration en fonction du sexe. Il est par conséquent intéressant de réfléchir à des méthodologies alternatives de questionnement sur ces thématiques. En complément des questions demandant aux enquêté·es de se projeter dans des relations fictives, Épic offre la possibilité d'étudier les qualités effectivement valorisées chez les conjoint·es par le biais d'une question ouverte. Pour chacune des relations amoureuses importantes déclarées, les enquêté·es devaient ainsi répondre à la question « Parlons de vos premières impressions concernant [prénom du/de la conjoint·e]. Qu'est-ce qui vous a plu chez lui/elle ». Cette approche à deux attraits majeurs dans le cadre de notre étude : elle permet d'approfondir la compréhension des goûts relatifs à l'âge et à la taille, en déterminant par exemple si la grande taille est spontanément valorisée dans les réponses ou si la petite taille est simplement perçue comme un trait « repoussoir », et elle permet d'ouvrir le champ des registres de goûts amoureux existant en dehors de ceux imposés dans les questions fermées de l'enquête, en identifiant les critères les plus importants aux yeux des enquêté·es. Pour reprendre le vocabulaire de M. Bozon et F. Héran, il s'agit d'identifier les « catégories du jugement amoureux » [@bozonFormationCoupleTextes2006, Chapitre 3].
+
+Une question très similaire était en effet déjà posée dans l'enquête *Formation du couple* de 1984, mais sous une forme plus fermée : pour décrire leur conjoint·e, les répondant·es pouvaient choisir quatre adjectifs dans une liste préétablie qui en contenait trente, tous à connotation positive. Si ce choix était avant tout déterminé par les contraintes techniques de l'époque, il est intéressant d'examiner l'effet de l'ouverture d'une telle question. La liste d'adjectifs avait été constituée à partir d'entretiens préliminaires à l'enquête, et devait donc refléter les traits les plus appréciés à l'époque. Les  entretiens qualitatifs de ce type sont d'une grande richesse, mais sont aussi nécessairement limités dans leur nombre. Il est alors difficile d'identifier une régularité statistique dans les réponses et le vocabulaire employé, et plus encore lorsqu'on essaye de croiser les différentes caractéristiques individuelles des répondant·es. Le choix d'une question ouverte permet de contourner cette étape, en n'imposant aucun vocabulaire *a priori*, et en laissant à l'enquêté·e la liberté de choisir le registre de sa réponse (accent sur des caractéristiques esthétiques ou morales, description d'une qualité, d'une activité partagée, ou d'un ressenti personnel au moment de la rencontre). Les méthodes de la statistique textuelle que nous mobilisons dans ce chapitre permettent, selon la même approche, d'éviter l'appauvrissement des réponses spontanées par un post-codage [@lebartStatistiqueTextuelle1994, p. 29].
+
+Après une brève présentation du corpus et un examen des avantages et des limites de cette formulation ouverte, nous étudierons les principales variations lexicales des réponses en fonction du sexe, de l'âge et de la classe.  
+
+## « Qu'est-ce qui vous a plu chez elle/lui ? » : avantages et limites d'une question ouverte
+
+### Standardisation et lemmatisation du corpus
+
+Un travail important de préparation du corpus à été nécessaire avant son exploitation statistique. Les réponses étant retranscrites par l'enquêteur·ice au moment de l'entretien, quelques erreurs de frappe ont dû être corrigées « manuellement » afin d'assurer l'homogénéité orthographique des réponses. Nous avons également procédé à la lemmatisation du corpus, c'est-à-dire au regroupement de plusieurs mots proches sous une forme commune appelée « lemme ». Les verbes sont ainsi ramenés à leur forme infinitive, les noms et adjectifs à leur masculin singulier (sauf exceptions où la forme plurielle a été jugée plus pertinente sur le plan sémantique, pour les mots « yeux » ou « jambes » par exemple). Cet emploi du masculin générique est loin d'être idéal, dans la mesure où il engendre des biais de lecture importants pour des adjectifs et des noms initialement employés au féminin. Il représente cependant l'approche la plus accessible en termes techniques, cette norme étant reprise par l'ensemble des bases de données lexicales permettant d'automatiser la lemmatisation [^4]. Cette simplification du corpus s'accompagne de la suppression des mots dits « outils » tels que les pronoms, articles, déterminants et adverbes particulièrement courants. Certains adverbes qui auraient pu être considérés comme mots outils tels que « très », « trop », ou « comme », ont été conservés, car ils apportent des informations intéressantes sur la manière de s'exprimer des enquêté·es selon leurs caractéristiques sociodémographiques. Enfin, nous avons fait le choix de considérer certaines expressions récurrentes telles que « coup de foudre » ou « joie de vivre » comme des formes uniques, notées « coupdefoudre » et « joiedevivre », afin de les identifier plus facilement.
+
+[^4]: Non avons utilisé ici une version légèrement adaptée de la base de données *Lexique 3.83*, disponible en accès ouvert sur le site <http://www.lexique.org>.
+
+Un autre enjeu important de la préparation du corpus a été l'identification et la gestion des « non réponses ». Une multiplicité de cas pouvait en effet correspondre à cette appellation : un champ de réponse laissé vide, un « refus » notifié tel quel par l'enquêteur·ice ou par des phrases telles que « ne souhaite pas répondre », « ne veut pas répondre » ; mais aussi des expressions plus ambiguës telles que « je ne saurais pas dire », « je ne me souviens plus », employées tantôt seules et tantôt en incise d'une réponse plus détaillée. Ces nuances nous ont amené à conserver l'ensemble des réponses dans l'analyse, en considérant qu'un refus ou qu'un désir d'éviter la question étaient des réponses à part entière. Par la suite, les réponses vides sont ainsi indiquées par la forme « nonréponse », et les formulations s'approchant d'un refus, d'un « ne sait pas » ou d'un « ne sait plus » sont remplacées par les formes uniques « refus », « nesaitpas » ou « nesaitplus ».
+
+### Des réponses souvent succinctes et génériques
+
+```{r gamme}
+# Nombre de mots par réponses
+histoire[, id_corpus := paste(ident_men, h_nrel_corr, sep = "_")]
+histoire[data.table(id_corpus = rownames(dtm), nbmots = apply(dtm, 1, sum)), 
+         nbmots := i.nbmots, on = "id_corpus"]
+histoire[as.data.table(as.matrix(dtm), keep.rownames = "id_corpus"),
+          c(colnames(dtm_ind)) := mget(colnames(dtm_ind)), on = "id_corpus"]
+
+# Gamme des fréquences
+freqmots <- frequent_terms(dtm, n = ncol(dtm)) %>%
+  data.table(keep.rownames = "mot")
+setnames(freqmots, "Global occ.", "freq")
+gammefreq <- freqmots[, .N, by = freq][order(freq)]
+
+# # Nombre de mots selon le sexe, l'âge, la cs et le niveau de diplôme
+# lapply(c("sexer", "ager_4cl", "pcsr", "niv_dipl"),
+#        function(v) histoire[,  mean(nbmots), keyby = v])
+# 
+# lapply(c("sexer", "ager_4cl", "pcsr", "niv_dipl"),
+# function(v) histoire[, crosstab(get(v), nbmots >= 5,
+#                                 prop.r = T, chisq = T)])
+# 
+# aov(nbmots ~ sexer, data = histoire) %>% summary
+# aov(nbmots ~ ager_4cl, data = histoire) %>% summary
+# aov(nbmots ~ pcsr, data = histoire) %>% summary
+
+hapax <- freqmots[freq == 1, mot]
+histoire[data.table(id_corpus = rownames(dtm), 
+                    hapax = apply(dtm[, hapax], 1, sum)),
+         hapax := i.hapax, on = "id_corpus"]
+
+```
+
+Quelques mesures quantitatives simples et l'identification des mots les plus utilisés donnent une première vision globale du corpus (Tableaux \@ref(tab:descr-corpus) et \@ref(tab:mots-freq)). Ce que nous appelons ici un « mot » correspond plus précisément au lemme sous lequel nous avons regroupé différents mots lors de l'opération de lemmatisation. Le nombre d'occurrences d'un mot correspond au nombre d'apparitions de ce mot au sein du corpus. En écartant les « mots-outils », le nombre moyen de mots « signifiants » par réponse n'est que de deux mots. Il s'agit peut-être d'un des désavantages principaux de l'ouverture d'une telle question : une liste d'adjectifs comme celle proposée dans l'enquête de 1984 certes limite et oriente les choix (le nombre de mots différents employés dans le corpus dépasse largement la sélection de trente adjectifs du questionnaire de « Formation des couples »), mais elle permet aussi à des enquêté·es éventuellement désemparé·es par la question d'identifier des mots qui ne leur seraient pas venus spontanément à l'esprit, ou qu'ils et elles n'auraient peut-être pas osé citer.
+
+```{r descr-corpus}
+histoire[, .("Effectif" = .N,
+             "Occurrences" = sum(nbmots), 
+             "Mots" = freqmots[, .N],
+             "Moyenne occ." = c(fmt_num(mean(nbmots), 2)),
+             "Écart-type occ." = c(fmt_num(sd(nbmots), 2)),
+             "Hapax" = gammefreq[freq == 1, N])] %>%
+
+  kbl(booktabs = T, escape = F, format = "latex", linesep = "", align = "c",
+      caption = "Description du corpus\\label{tab:stats-generales}") %>%
+  kable_styling(position ="center", latex_options = "HOLD_position") %>%
+  # column_spec(1:6, width = "4em") %>%
+  footnote(general = c("Source : Ined-Insee, Épic, 2013-2014.", "« Mots » : nombre de lemmes uniques identifiés dans le corpus. ", "Hapax : mot n'apparaissant qu'une fois dans le corpus."), 
+               general_title = "", escape = F, threeparttable = T) 
+```
+
+```{r mots-freq}
+# Les 30 mots les plus utilisés du corpus, par nombre d'occurrences décroissant
+cbind(freqmots[1:10, .(mot, freq)],
+      freqmots[11:20, .(mot, freq)],
+      freqmots[21:30, .(mot, freq)]
+      )[, setnames(.SD, rep(c("Mot", "Occ."), 3))] %>%
+  kbl(longtable = T, booktabs = T, escape = F, format = "latex", linesep = "",
+      caption = "Mots les plus utilisés du corpus, par nombre d'occurrences décroissant") %>%
+  kable_styling(position ="center", latex_options = "hold_position") %>%
+  footnote(general = c("Source : Ined-Insee, Épic, 2013-2014.", 
+                       "Lecture : « gentillesse » est le mot le plus employé du corpus avec 1257 occurences."), 
+               general_title = "", escape = F, threeparttable = T) %>%
+  column_spec(column = c(2,4), border_right = T) 
+```
+
+Les réponses d'Épic sont à la fois courtes et assez peu détaillées au niveau sémantique. Le mot « physique » illustre bien cette imprécision : deuxième mot le plus utilisé (`r freqmots[mot == "physique", freq]` occurrences, dans `r pct(sum(dtm[, "physique"] > 0)/nrow(dtm))` des réponses), il reste général et évasif, et est employé dans `r pct(histoire[physique > 0, wtd.mean(nbmots %in% 1:2)])` des cas seul ou avec un unique autre mot signifiant (« son physique et sa gentillesse » ou « son humour et son physique », par exemple). Ces réponses génériques sont fréquentes dans le corpus, alors même que les enquêteur·ices avaient pour consigne de relancer les répondant·es pour obtenir plus de précisions sur les traits physiques appréciés. La forme regroupant les tournures proches de « nesaitpas » fait également partie des 15 mots les plus fréquents du corpus (383 occurrences, soit `r pct(sum(dtm[, "nesaitpas"] > 0)/nrow(dtm))` des réponses), employée seule dans `r pct(histoire[nesaitpas > 0, wtd.mean(nbmots == 1)])` des cas, ou pour introduire une réponse plus ou moins évasive.
+
+Le nombre moyen de mots employés présente quelques variations statistiquement significatives selon les caractéristiques des enquêté·es - les personnes plus âgées et celles appartenant aux classes supérieures formulent des réponses un peu plus longues - mais minimes dans leur ampleur, les moyennes restant comprises entre 1,9 et 2,2 mots. Les personnes les plus âgées sont aussi celles qui ont employé le plus d'« hapax », c'est-à-dire de mots n'apparaissant qu'une seule fois dans le corpus - `r pct(histoire[ager_4cl == 4, mean(hapax > 0)])` des 55-65 ans ont employé au moins un hapax, contre `r pct(histoire[ager_4cl != 4, mean(hapax > 0)])` dans le reste de la population -, signe d'un vocabulaire soit plus divers soit plus spécifique à ces générations. Les réponses des femmes et des hommes sont, pour leur part, formellement très similaires.
+
+Nous verrons dans la suite de ce chapitre que cette homogénéité formelle s'accompagne au contraire d'importantes variations sémantiques selon les différents groupes sociaux. L'ouverture de la question apparaît plutôt décevante au regard de la longueur et de la richesse des réponses, mais elle semble avoir donné plus de liberté aux enquêté·es dans le choix du registre de leur réponse et du vocabulaire employé.
+
+
+## Un corpus de réponses structuré par le genre, la classe, et l'âge
+
+La faible longueur des réponses réduit l'éventail des méthodes de la statistique textuelle que nous pouvons mobiliser pour l'étude du corpus. Il est notamment impossible de rapprocher et classifier des mots qui partageraient le même contexte sémantique, dans le but d'identifier de manière systématique les différents registres et champs lexicaux présents dans les réponses. Une des principales méthodes disponibles pour le traitement de textes aussi courts est l'analyse factorielle des correspondances (AFC) sur tableau lexical agrégé[^2]. Cette méthode d'analyse factorielle appliquée aux données textuelles permet de relier les différents termes du corpus aux caractéristiques individuelles des répondant·es qui les ont employés. La projection des mots et des caractéristiques individuelles sur le plan factoriel rapproche ainsi les mots utilisés par des personnes aux profils similaires, et permet d'identifier « manuellement » les registres et champs lexicaux propres à ces différents groupes.
+
+[^2]: L'AFC est réalisée sur un tableau de contingence croisant les mots du corpus et les modalités des variables considérées. Ainsi l'effectif présent au croisement du mot « gentil » et de la modalité « femme » correspond au nombre d'occurrences de ce mot dans les réponses des enquêtées. Voir le chapitre 3 de @lebartStatistiqueTextuelle1994 pour une description de cette méthode, et @guerin-paceContoursMotEnvironnement1998 pour un exemple d'application.
+
+Selon une logique inverse au raisonnement « toutes choses égales par ailleurs », ce type de méthode n'isole pas les effets propres des différentes variables considérées, mais rassemble au contraire les individus aux caractéristiques proches. Deux variables en partie corrélées, comme le sexe et le nombre de partenaires sexuel·les par exemple, vont ainsi contribuer à la construction d'un même axe. Pour faciliter l'interprétation des résultats, nous faisons le choix de n'introduire que les trois variables identifiées comme les plus structurantes : le sexe, la catégorie socioprofessionnelle, et l'âge à la passation de l'enquête^[Il existe des liens importants entre le sexe et la catégorie socioprofessionnelle, les employé·es et les inactif·ves étant sur-représenté·es chez les femmes, et les cadres, petit·es indépendant·es et ouvrier·ères chez les hommes. Dans le cadre de l'analyse factorielle du corpus, ces caractéristiques de genre et de classe sont néanmoins suffisamment structurantes pour déterminer deux dimensions orthogonales.]. Pour les enquêté·es ayant déclaré plusieurs relations, les différentes réponses sont concaténées en une seule, et les éventuels mots en double ne sont comptés qu'une seule fois. La relative pauvreté du corpus combinée au caractère fortement structurant des variables sociodémographiques rendent en effet les analyses factorielles des réponses par relation plutôt que par individu peu concluantes. Nous mobiliserons toutefois la méthode complémentaire dite des « mots spécifiques » pour identifier les vocabulaires particulièrement liés à certain type de relations (relation en cours ou finie au moment de l'enquête, relation débutée plus ou moins longtemps avant la passation de l'enquête, etc.) [^3]. Afin d'écarter les mots trop rares tout en conservant une diversité et un nombre suffisant de réponses, l'AFC a été réalisée sur l'ensemble des mots apparaissant dans au moins 15 documents, excluant ainsi de l'analyse 164 réponses qui ne contenaient aucun de ces mots. Nous avons également écarté du corpus les mots « femme », « fille », « homme », et « garçon », afin d'éviter de leur donner un poids artificiellement élevé dans la construction d'un axe selon le sexe.
+
+[^3]: La méthode des mots spécifiques est un outil probabiliste de la statistique textuelle permettant, comme son nom l'indique, d'identifier les mots « spécifiques » à un groupe de réponses par rapport aux autres. Le détail de cette méthode est présenté en Annexe \@ref(motspe).
+
+Ces précautions prises, les différences dans les réponses des femmes et des hommes permettent à elles seules d'expliquer 44% des variations de vocabulaire dans le corpus. Le deuxième axe, résumant 15% des variations, présente un gradient remarquable dans les termes employés selon la catégorie socioprofessionnelle, opposant d'une part les cadres et professions intermédiaires, d'autre part les employé·es et les ouvrier·ères. Le troisième axe, résumant 13% des variations, présente également une structuration notable selon l'âge, avec l'opposition des réponses des plus jeunes à celles des plus âgé·es. Les dimensions suivantes n'apportent que peu d'information et ne présentent pas de spécificités fortes. Le caractère fortement genré du premier axe facilite la lecture des deux plans factoriels qu'il constitue avec la classe (Figure \@ref(fig:afc-pcs)) et l'âge (Figure \@ref(fig:afc-age)). Les contributions respectives des mots et des caractéristiques à ces trois axes sont présentées en annexe (Tableaux \@ref(tab:contrib1), \@ref(tab:contrib2), et \@ref(tab:contrib3)).
+
+```{r verif-corpus, eval=F}
+repondant[as.data.table(as.matrix(dtm_ind), keep.rownames = "ident_men"),
+          c(colnames(dtm_ind)) := mget(colnames(dtm_ind)), on = "ident_men"]
+
+sapply(c("nepeutpasdire", "tout", "ensemble", "général",
+         "rien", "riendutout", "début", "voiture",
+         "physique", "joli", "beauté", "visage", "corps", 
+         "formes", "jambes", "poitrine", "fesses",
+         "gentillesse", "gentil", "attention",
+         "séduisant", "charmeur", "beauparleur", "italien",
+         "humour", "rigoler", "rigolo",
+         "assurance", "prestance", "sûrdesoi", "protecteur", "rassurant",
+         "grand", "grandeur", "petit", "poupée", "carrure", "musclé",
+         "âgé", "âge", "vieux", "jeunesse"), simplify = F,
+       mycrosstab, DT = repondant[!is.na(h_nbrel_corr)], x = sexer)
+
+sapply(c("nesaitplus", "coupdefoudre", "impression", "toutdesuite",
+        "mince", "formes", "musclé",
+        "sport", "danser", "danseur",
+        "humour", "rigoler", "rigolo", "drôle"), simplify = F,
+       mycrosstab, DT = repondant[!is.na(h_nbrel_corr)], x = ager_4cl)
+
+sapply(c("voix", "main", "humour", "drôle", "rigolo", "rigoler"), simplify = F,
+       mycrosstab, DT = repondant[!is.na(h_nbrel_corr)], x = pcsr)
+
+concordances(corpus, dtm, "petit")
+concordances(corpus, dtm, "plus")
+
+
+## Durée écoulée depuis le début de la relation
+histoire[, per_rappel := as.numeric(as.period(interval(date_deb, ymd("2014-01-01"))), "months")]
+histoire[, per_rappel_3cl := fcase(per_rappel < 10*12, 1,
+                                   per_rappel >= 10*12 & per_rappel < 30*12, 2,
+                                   per_rappel >= 30*12, 3)]
+
+corpus_age4 <- corpus[names(corpus) %in% histoire[ager_4cl == 4, id_corpus]]
+dtm_age4 <- dtm[names(corpus_age4), ]
+specific_terms(dtm_age4, p = 0.02, n = ncol(dtm_age4),
+               variable = merge(data.table(id_corpus = rownames(dtm_age4)),
+                                histoire, on = "id_corpus", sort = F)$per_rappel_3cl)
+
+specific_terms(dtm, p = 0.02, n = ncol(dtm),
+               variable = merge(data.table(id_corpus = rownames(dtm)),
+                                histoire, on = "id_corpus", sort = F)$h_fin)
+
+corpus_fem <- corpus[names(corpus) %in% histoire[sexer == 2, id_corpus]]
+dtm_fem <- dtm[names(corpus_fem), ]
+specific_terms(dtm_fem, p = 0.02, n = ncol(dtm_fem),
+               variable = merge(data.table(id_corpus = rownames(dtm_fem)),
+                                histoire, on = "id_corpus", sort = F)$ager_deb_4cl)
+
+corpus_hom <- corpus[names(corpus) %in% histoire[sexer == 1, id_corpus]]
+dtm_hom <- dtm[names(corpus_hom), ]
+specific_terms(dtm_hom, p = 0.02, n = ncol(dtm_hom),
+               variable = merge(data.table(id_corpus = rownames(dtm_hom)),
+                                histoire, on = "id_corpus", sort = F)$ager_4cl)
+
+
+
+
+specific_terms(dtm_fem, p = 0.02, n = ncol(dtm_fem),
+               variable = merge(data.table(ident_men = rownames(dtm_fem)),
+                               histoire, on = "ident_men", sort = F)$ager_4cl)
+
+specific_terms(dtm, p = 0.02, n = ncol(dtm),
+               variable = merge(data.table(id_corpus = rownames(dtm)),
+                                histoire, on = "id_corpus", sort = F
+                                )$ager_deb_4cl)
+
+
+```
+
+
+### Une question plus ou moins pertinente selon les enquêté·es
+
+La distribution du vocabulaire selon le genre, la classe et l'âge permet de préciser nos réflexions sur la pertinence d'une question ouverte touchant aux relations amoureuses. Une première dimension importante à prendre en compte dans l'interprétation des réponses est la période de rappel qu'implique une telle question, c'est-à-dire le temps plus ou moins long qui s'est écoulé entre le début de la relation et le jour de passation de l'enquête. Il est ainsi significatif que la forme « ne sait plus », par laquelle nous avons résumé les différentes expressions exprimant un oubli, soit davantage utilisée par les répondant·es les plus âgé·es. En revenant à une analyse des réponses en termes de relations et non plus seulement d'individus, on constate en outre que cette forme est spécifique, parmi les relations des répondant·es âgé·es entre 55 et 65 ans, aux relations ayant débuté au moins 30 ans avant l'enquête.
+
+La forme « ne sait plus » est également spécifique aux relations finies au moment de l'enquête, et ce quelque soit l'âge des répondant·es (78% de ses occurrences apparaissent dans des réponses associées à des relations finies). Cette observation amène une autre problématique liée à la question « qu'est-ce qui vous a plu... » : outre l'enjeu temporel, et une éventuelle réticence à évoquer les débuts d'une relation désormais terminée, il n'est pas acquis que les enquêté·es aient effectivement quelque chose à répondre à ce type d'interrogation. Cette réserve peut s'expliquer par la nature du sujet abordé : depuis les travaux pionniers de A. Girard, le caractère éminemment social des rencontres et des unions amoureuses ne fait plus de doute aux yeux des sociologues, mais cette vision pragmatique ne s'est pas nécessairement diffusée dans le reste de la population. On retrouve ainsi sur l'axe de l'âge, proche du « ne sait plus », l'expression « coup de foudre » et le mot « impression », tous deux évoquant une expérience immédiate qu'il est difficile de mettre en mot. Cette idée n'est pas propre aux répondant·es les plus âgé·es, elle varie simplement dans sa formulation selon les différents groupes interrogés. Ainsi l'instantanéité du coup de foudre se retrouve chez les plus jeunes dans l'expression « tout de suite », qui suggère une entente naturelle dès le premier contact. Un ensemble de tournures telles que « je ne saurais pas dire », « je ne peux pas expliquer », que nous avons regroupé sous la forme « ne peut pas dire », représente également une bonne illustration de cette difficulté à exprimer ce qu'on considère comme inexprimable. Il est alors particulièrement révélateur que cette forme ce retrouve davantage chez les hommes, et ce quelque soit leur âge. De fait dès leur enfance [@diterJeAimePeu2015a], puis pendant leur adolescence [@clairDivisionGenreeExperience2007], les hommes sont encouragés à construire leur masculinité loin des sphères intimes et « féminines » des sentiments et des émotions. Disposés, comme nous le verrons, à se prononcer sur l'apparence physique de leur partenaire, les ressorts du sentiment amoureux apparaissent plus mystérieux, et cela se traduit par l'usage de formulation évasives comme « un ensemble », « un tout », « en général ».
+
+À l'opposé, l'usage très spécifique aux femmes du « rien » et du « rien du tout » révèle des réticences d'une autre nature : sur le moment ou avec le recul, l'enquêtée peut considérer que rien ne lui a plu chez son conjoint en début de relation, remettant ainsi en cause l'intérêt même de la question. Cette forme de réponse négative se retrouve aussi bien pour les relations finies que pour celle en cours au moment de l'enquête. M. Bozon avait noté dans les années 1980 que l'image du ou de la conjoint·e désiré·e était plus précise chez les femmes que chez les hommes, mais que les femmes étaient aussi plus susceptibles de se satisfaire d'un conjoint qui ne leur plaisait pas physiquement au départ [@bozonFormationCoupleTextes2006, p. 105]. C'est peut-être une logique similaire qui articule cet usage différencié du « tout » et du « rien », plusieurs réponses exprimant d'ailleurs l'idée « rien ne m'a plu au début » - sans pour autant préciser les qualités appréciées par la suite. On peut noter ici, de manière plus anecdotique, l'apparition du mot « voiture » dans plusieurs réponses féminines, renvoyant à des relations où la possession d'un véhicule est parfois la seule qualité citée chez le conjoint.
+
+### L'importance accordée au physique et le jeu de séduction hétérosexuel
+
+Les réponses des femmes et des hommes varient tout autant que leurs non-réponses. Cette opposition est assez bien schématisée par les deux mots les plus utilisés dans le corpus, malgré leur caractère très générique : la « gentillesse » est davantage valorisée par les femmes, le « physique » par les hommes.
+
+L'attention plus grande portée par les hommes aux qualités esthétiques de leur conjointe avait déjà été constatée par M. Bozon dans les années 1980. Dans notre corpus, en complément du « physique », les mots « joli » et « beauté » sont par exemple plus souvent employés dans les réponses masculines. L'usage d'une question ouverte dans Épic permet de constater la propension des hommes à entrer dans le détail de ces caractéristiques corporelles, avec un champ lexical parfois très précis :  « visage », « corps », « formes », « silhouette », mais aussi « jambes », « poitrine », « fesses ». Ce vocabulaire sexualisant n'est pas particulièrement fréquent, mais apparaît presque exclusivement dans les réponses masculines, et sans variations marquées selon la classe. On note néanmoins certaines évolutions de goûts entre générations, les hommes plus âgés évoquant la « minceur » de leur conjointe, les hommes plus jeunes valorisant au contraire leurs « formes ». Ces résultats concordent avec les constats établis dans la littérature et dans nos analyses précédentes sur la plus grande aisance des hommes à parler des aspects purement physiques de leurs relations amoureuses, laissant aux femmes la dimension sentimentale et affective. De fait, la diversité des termes renvoyant explicitement à des caractéristiques physiques est bien moindre chez les femmes. L'appréciation esthétique du conjoint passe souvent par l'emploi d'expressions communes telles que « beau garçon », « bel homme », « beau gosse ». Les seuls termes majoritairement employés par les femmes et renvoyant précisément à des parties du corps sont « voix » et « mains », principalement dans les classes supérieures. Tandis que les mains renvoient probablement à un imaginaire amoureux propre à ces catégories sociales, l'évocation de la voix, et souvent de la voix « grave », semble s'inscrire dans un champ lexical plus large de la séduction. Des qualificatifs tels que « séduisant », « charmeur », « beau parleur » sont en effet presque exclusivement utilisés par des femmes pour décrire leur conjoint en début de relation. On constate finalement, tout comme M. Bergström dans son étude des premiers contacts sur les sites de rencontre en ligne, la persistance d'un script fortement genré de la rencontre amoureuse ou sexuelle, où les femmes doivent faire montre de réserve en attendant les avances masculines, et où les hommes jouent en retour à « faire tomber les barrières »  [@bergstromNouvellesLoisAmour2019, p.193].
+
+C'est dans ce cadre que peut être interprétée la valorisation très fréquente chez les femmes de l'« humour » de leur conjoint, et plus particulièrement chez les enquêtée les plus jeunes. Le fait que l'humour ne soit pas mentionné dans les travaux de M. Bozon dans les années 1980 semble confirmer le caractère générationnel de cette préférence. La capacité à « faire rire » est par ailleurs valorisée quelque soit la catégorie socioprofessionnelle, mais avec certaines variations dans le vocabulaire employé : les enquêtées de classes populaires aiment les hommes « rigolos », celles des classes supérieures apprécient davantage les hommes « drôles » et leur « sens de l'humour ». Selon l'historienne Sabine Melchior-Bonnet, faire rire a longtemps été une prérogative masculine. Seuls les hommes avaient la liberté de rire ostensiblement, leur virilité étant même confortée par la transgression morale, voir l'obscénité, permise par l'humour. Les femmes devaient elles se cantonner à la délicatesse des sentiments et n'esquisser qu'un sourire, sous peine de déroger à la norme de réserve féminine, voir d'être associées à la figure trop libérée de la prostituée. Dans le script de séduction hétérosexuel, on considérait que lorsque la femme riait, c'était qu'elle cédait aux avances [@melchior-bonnetRireFemmesHistoire2021, chap. 4]. Cette assignation genrée des rôles s'est aujourd'hui affaibli, comme l'illustre l'arrivée des femmes dans les « professions du rire » (dessin humoristique, bande dessinée, stand-up) [@melchior-bonnetRireFemmesHistoire2021, chap. 20]. Elle demeure cependant nette dans notre corpus de réponses, où l'humour est beaucoup plus reconnu chez les conjoints que chez les conjointes. La valorisation particulière de ce trait dans les plus jeunes générations est plus compliquée à expliquer que sa dimension genrée. Nous verrons par la suite qu'elle est peut-être liée à une nouvelle conception de la relation amoureuse comme lieu d'échange et de partage. Mais si le rire se partage, ce sont les hommes qui le provoquent. 
+
+
+### Des caractéristiques fortement genrées
+
+Dans ce contexte où les jugements sur le corps apparaissent comme le domaine réservé des hommes, l'adjectif « grand » tient un rôle particulier. Son caractère récurrent dans les réponses (il s'agit du quinzième mot le plus cité du corpus) confirme que la taille reste une dimension importante dans l'appréciation du conjoint ou de la conjointe, et que la grande taille est davantage valorisée. Il est néanmoins deux fois plus employé dans les réponses des femmes que dans celles des hommes, écart qui souligne, comment nous l'avons vu dans les chapitres précédents, la place que prend le genre dans la formation de ces goûts. À titre de comparaison, l'adjectif « petit » est beaucoup moins utilisé que « grand » dans le corpus, et l'est toujours dans des réponses masculines lorsqu'il désigne la taille ou une autre partie du corps (visage, bouche, poitrine). On peut également noter que cet adjectif est utilisé à deux reprises par des hommes dans la formulation « petite poupée ». L'usage du mot « poupée » est rare (il n'apparaît que quatre fois dans le corpus), mais illustre bien, en complément de son caractère objectivant et infantilisant, les problématiques de genre qui sous-tendent l'appréciation de la taille : la petitesse n'est un trait appréciable que lorsqu'il est présent chez une femme. 
+
+Les réponses ouvertes combinées aux méthodes de la statistique textuelle ont l'avantage de replacer les mots utilisés dans des champs lexicaux plus larges, et de pouvoir ainsi éclairer l'usage de certains termes lorsqu'il n'est pas envisageable de mener des entretiens complémentaires comme ont pu le faire M. Bozon et F. Héran en 1984. Ainsi les femmes aiment les hommes grands, mais aussi ceux qui ont de la « prestance », de l'« assurance » et qui sont « sûrs d'eux », autrement dit les hommes qui savent s'affirmer et prendre de la place. Dans un registre assez proche, les femmes valorisent les hommes « protecteurs », « rassurants », avec qui elles se sentent en « sécurité ». Il est remarquable de retrouver ces mêmes mots dans les entretiens menés par M. Buscatto, lorsque les femmes de très grande taille qu'elle interroge justifient leur désir d'être en couple avec des hommes plus grands qu'elles [@buscattoTresGrandeTaille2022, p.150], et un registre de réponses très proche dans les entretiens menés par M. Bozon et F. Héran dans les années 1980, lorsque des enquêtées de toute taille justifient ce même souhait [@bozonFormationCoupleTextes2006, p.146]. L'appréciation de la « carrure » du conjoint, et chez les femmes plus jeunes de son physique « musclé », fait également partie des rares références directement corporelles dans les réponses féminines, et s'inscrivent dans cette valorisation d'un homme physiquement imposant et capable de défendre une femme pensée comme vulnérable par nature. Ces termes sont employés par des femmes quelle que soit leur catégorie socioprofessionnelle, et donnent bien à voir le couple hétérosexuel comme un des lieux de mise en scène d'une supposée complémentarité des sexes. 
+
+Ce champ lexical coexiste avec un vocabulaire de l'affectif plus difficile à analyser. Dans le corpus de réponses, ce sont en effet avant tout les femmes qui valorisent la « gentillesse » et l'« attention » que leur porte leur conjoint, une tendance que M. Bozon avait déjà identifié dans les années 1980. Ces traits correspondent assez bien à la figure de l'homme protecteur et rassurant. Mais le domaine de l'affectif, comme celui du *care* ou du soin porté aux autres, est pourtant traditionnellement associé au féminin [@skeggsFormationsClassGender1997; @leduSyntheseEntreCure2019]. Deux explications de ce résultat à première vue surprenant peuvent être envisagées. D'une part, les femmes étant socialisées à développer ces qualités affectives, elles y seraient également plus attentives chez un conjoint, tandis que les hommes y seraient moins sensibles. D'autre part, la reconnaissance d'un trait comme la gentillesse, pourtant peu associé au masculin, pourrait justement servir à évoquer la spécificité d'un conjoint « pas comme les autres ».
+
+L'usage de l'adverbe comparatif « plus » est intéressant à examiner dans ce contexte. Davantage utilisé par les femmes, il sert à comparer le conjoint avec soi-même pour évoquer un écart d'âge ou de taille (« plus grand », « plus âgé »), mais également avec d'autres hommes lorsqu'il s'agit de mettre en valeur une qualité propre au conjoint (« plus mature que les autres », « plus attentionné que mon mari », « plus ouvert que [prénom masculin] »). De nombreux travaux ont décrit la manière dont les jeunes femmes favorisaient la maturité des hommes plus âgés par rapport à leur pairs, contribuant ainsi à la création de la différence d'âge moyenne observée [@bozonFormationCoupleTextes2006; @maillochonAgeAmoursDifference2001; @bergstromNouvellesLoisAmour2019]. On retrouve bien cette tendance dans le corpus de réponse, d'une part chez les enquêtées les plus jeunes, d'autre part pour les relations ayant débuté jeunes (l'adjectif « mature » est par exemple surtout employé par des enquêtées âgées entre 25 et 44 ans, et l'expression « plus âgé » est  spécifique aux relations commencées avant l'âge de 21 ans). À l'inverse, le mot « jeunesse » est avant tout employé par des hommes de plus de 45 ans, renvoyant aux analyses de M. Bergström selon lesquelles les préférences des hommes plus âgés pour les femmes plus jeunes contribuent également au maintien de l'écart d'âge moyen. On notera cependant que les références à l'âge sont généralement beaucoup plus rares que celles à la taille dans le corpus de réponses (130 occurrences au total pour les mots « âge », « âgé », « jeunesse » et « jeune », contre 533 occurrences pour les mots « taille », « grand », « grandeur », et « petit »), et davantage spécifiques à des groupes de répondant·es particuliers (notamment en termes d'âge). Ces résultats confortent nos réflexions précédentes sur la nécessité de dissocier les préférences pour l'âge et la taille dans l'étude des goûts amoureux. Ils suggèrent notamment que l'écart de taille serait un critère de jugement plus important, ou du moins plus répandu ou plus conscientisé, que l'écart d'âge.
+
+Du côté des hommes, le vocabulaire directement corporel côtoie un champ lexical plus large de l'apparence et de la présentation de soi. Avec de légères variations lexicales selon la classe et l'âge, mais dans des registres très similaires, les conjointes sont ainsi valorisées pour leur « sourire », leur « joie de vivre », leur « bonne humeur », leur « dynamisme », leur « énergie », leur caractère « pétillant » et « spontané », leur « naturel », leur « simplicité ». M. Bozon avait relevé un vocabulaire très similaire dans « Formation des couples », et en proposait alors l'interprétation suivante :
+
+> Le psychologique et l'esthétique ne sont pas séparés quand on juge les femmes. L'un et l'autre convergent en des jugements sur la présentation et sur le style apparent de la personne ; le style extérieur est valorisé en tant que tel, parce qu'il renvoie à un rôle de représentation et de médiation sociales, qui est ordinairement reconnu aux femmes. [@bozonFormationCoupleTextes2006, p.119]. 
+  
+À cet égard, les stéréotypes de genre ne semblent pas avoir beaucoup évolué depuis 1984.
+
+
+
+### Des goûts de classe encore très affirmés
+
+
+La spécificité des vocabulaires féminins et masculins est la plus marquante dans l'analyse des réponses, mais les qualités citées se différencient aussi nettement en fonction de la classe. On retrouve ainsi des registres déjà identifiés par M. Bozon en 1984 : les personnes des classes supérieures valorisent chez leur conjoint·e l'« intelligence », « la culture », chez les hommes l'« humour » et le « charisme », et plus généralement les qualités intellectuelles qui permettent de briller dans leurs professions et cercles sociaux, tandis que les enquêté·es de classe populaire évoquent plutôt le « sérieux », l'aspect « travailleur », et le fait de « savoir ce qu'on veut ». D'un point de vue relationnel il s'agit moins de briller en société que d'être « simple » et « franc·he », « serviable » et « gentil·le », et de « bien parler ».
+
+Un autre registre spécifique aux classes supérieures est celui de l'« originalité » : le ou la conjoint·e se démarque par son côté « artiste », « mystérieux », « intéressant », « différent », « indépendant », et par sa « force de caractère ». La singularité apparaît comme un critère important du jugement amoureux dans ces milieux. L'usage du verbe « ressembler », propre cette fois aux enquêté·es de classes populaires, est intéressant à relever dans ce contexte. Il renvoie dans certaines réponses à des personnes proches (« un amour d'enfance », « mon ex », « mon premier mari », « mon père », ou simplement ego), mais aussi à des personnes célèbres (« France Gall », « Julien Clerc », « Kurt Cobain », « Charles Aznavour », « George Clooney », « Claude François », « Tom Cruise », « Sting », « Lino Ventura », « George Michael », « C. Jérome », « Jean Réno », « Charles Bronson », « Isabelle Hupert », « Jim Morisson », « Jeanne Mas », « Mike Brant », et même le « Christ »). Il s'agit ici encore de valoriser une forme d'exception, mais cette fois en la rapprochant de figures connues faisant office de références et de modèles, notamment dans la culture populaire. 
+
+On notera toutefois que des termes très liés à des goûts de classe tels que « travailleur·euse », « sérieux·se », « serviable », ou « culture » sont surtout présents dans les réponses des générations les plus anciennes, laissant ouverte la possibilité d'une « moyennisation » de la vision du couple chez les plus jeunes. On relève d'ailleurs dans les réponses de ces dernier·ères un vocabulaire décrivant davantage les qualités de la relation que celles du conjoint ou de la conjointe : bonne « entente », « feeling », « complicité », « confiance », « conversation », « présence », la relation appréciée est faite de bon moments partagés et d'une forme de compatibilité naturelle entre les caractères et les « façon d'être » des deux membres du couple. Comme nous l'avons vu, rire ensemble fait également partie des activités appréciées par les jeunes générations, bien que l'humour soit surtout reconnu quand il vient des hommes. Autre signe du temps et de l'évolution des cadres de rencontre, les talents de « danse » représentaient pour les enquêté·es les plus âgé·es une qualité importante et souvent le prétexte d'un premier contact, tandis que les plus jeunes se montrent plutôt heureux·ses de pratiquer le même « sport » que leur conjoint·e.
+
+\vspace{2cm}
+
+L'exploration de la question ouverte d'Épic sur ce qui a plu chez la ou le conjoint·e en début de relation a ainsi apporté un contrepoint aux questions fermées sur les préférences d'âge, de taille, de diplôme et de positionnement politique. Le caractère court et assez imprécis des réponses met au jour la difficulté ou la réticence des enquêté·es à s'exprimer sur une telle question, mais les variations de vocabulaire selon le sexe, la catégorie socioprofessionnelle et l'âge sont suffisamment marquées dans le corpus pour dégager des tendances importantes. L'opposition entre les réponses des femmes et des hommes est la plus structurante, et s'ancre dans les normes de genre déjà évoquées dans les chapitres précédents : les femmes mettent en avant le rôle à la fois de séducteur et de protecteur de leur conjoint, les hommes s'autorisent davantage de jugements sur l'apparence physique de leur conjointe tout en restant évasifs sur d'autres aspects. Les goûts de classe identifiés par M. Bozon dans les années 1980 n'ont pas non plus disparus des réponses, mais paraissent moins présents chez les jeunes générations, dont l'idéal relationnel fondé sur le partage et les affinités naturelles semble prendre le pas sur d'autres critères.
+
+
+```{r afc-ind}
+afc_cols <- c("Sexe" = "sexer", 
+              "Âge" = "ager_4cl",
+              "PCS à la passation" = "pcsr")
+
+# lapply(cols, tri, DT = histoire)
+
+formats_afc <- list(sexer = toupper(formats$sexer),
+                    ager_4cl = toupper(formats$ager_4cl),
+                    pcsr = toupper(c("cadres", "intermédiaires", "indépendant·es", 
+                                     "employé·es", "ouvrier·ères", "inactif·ve")),
+                    niv_dipl = paste0("nivetude_", 1:4),
+                    h_nbpart_4cl = paste0("nbpart_", c("0-1", "2-4", "5-9", "+10")),
+                    encouple = c("encouple", "celib_voulu", "celib_non_voulu"),
+                    clust = paste0("repr_", c("conservatrices", 
+                                              "moderées", "libérales", "nsp")))
+
+corpus_ind_var <- set_corpus_variables(
+  corpus_ind,
+  data.frame(merge(data.table(ident_men = names(corpus_ind)),
+                   repondant, by = "ident_men",all.x = T
+  )[, sapply(names(.SD), simplify = F,
+             function(v) factor(get(v), labels = formats_afc[[v]])),
+    .SDcols = afc_cols], row.names = names(corpus_ind)))
+setDF(meta(corpus_ind_var))
+
+afc <- mycorpus_ca(corpus_ind_var, dtm_ind, variables = afc_cols, 
+                   sparsity = 0.998, ncp = 6)
+# fviz_screeplot(afc)
+
+ggs <- lapply(list(c(1,2), c(1,3)), function(axes) {
+  factoextra::fviz_ca_biplot(afc, axes = axes,
+                             title = NULL,
+                             invisible = c("row.sup"), repel = T,
+                             col.row = "firebrick", col.col = "black", pointsize = 0.25,
+                             shape.row = 15, shape.col = 20, labelsize = 3,
+                             axes.linetype	= "blank",
+                             select.col = list(cos2 = quantile(afc$col$cos2[, axes], 0.75)),
+                             select.row = list(cos2 = quantile(afc$row$cos2[, axes], 0.75))) +
+    geom_vline(xintercept = 0, linetype = "dashed", size = 0.20) +
+    geom_hline(yintercept = 0, linetype = "dashed", size = 0.20) +
+    # xlim(c(xmin, xmax)) + ylim(c(ymin, ymax)) +
+  labs(caption = paste(sep = "\n", 
+                       "Source : Épic, Ined-Insee (2013-2014)",
+                       "Présentation des 25% des modalités les mieux représentées sur le plan factoriel.")) +
+    theme(text = element_text(size = 9), 
+          axis.title = element_blank(),
+          plot.caption = element_text(hjust = 0),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),)
+})
+
+# ggarrange(plotlist = ggs)
+```
+
+
+\captionsetup{width=1.5\textwidth}
+\begin{landscape}
+```{r afc-pcs, fig.cap="AFC sur tableau lexical aggrégé selon le sexe, la PCS et l'âge - Dimensions 1 (44\\%) et 2 (15\\%)", fig.dim=c(10,7)}
+ggs[[1]]
+```
+\end{landscape}
+
+
+
+\begin{landscape}
+```{r afc-age, fig.cap="AFC sur tableau lexical aggrégé selon le sexe, la PCS et l'âge - Dimensions 1 (44\\%) et 3 (13\\%)", fig.dim=c(10, 7)}
+ggs[[2]]
+```
+\end{landscape}
+\captionsetup{width=0.9\textwidth}
+
+
+

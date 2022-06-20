@@ -1,0 +1,10 @@
+\chapter*{Références}\addcontentsline{toc}{chapter}{Références}
+\singlespacing
+
+<div id="refs"></div>
+
+
+\begingroup
+\listoffigures
+\listoftables
+\endgroup

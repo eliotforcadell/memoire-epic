@@ -1,0 +1,206 @@
+\chapter*{Annexes}\addcontentsline{toc}{chapter}{Annexes}
+\setcounter{chapter}{4}
+\setcounter{section}{0}
+\setcounter{table}{0}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thetable}{A.\arabic{table}}
+
+\onehalfspacing
+
+## Codage de la catégorie socioprofessionnelle et du niveau de diplôme {#rec-classe}
+
+Pour des raisons d'effectifs, les catégories socioprofessionnelles utilisées dans ce mémoire ont été légèrement adaptées par rapport à la nomenclature traditionnelle. Les « agriculteur·ices exploitant·es » ne représentent en effet que `r repondant[, pct(wtd.mean(m_cs8 == 1, pond))]` de la population, et seulement `r repondant[sexer == 2, pct(wtd.mean(m_cs8 == 1, pond))]` des femmes. Pour assurer la significativité statistique des analyses multivariées, nous avons choisi de regrouper cette catégorie avec celles des « indépendant·es ». Nous avons en parallèle associé les « chef·fes d'entreprise de 10 salarié·es ou plus » à la catégorie des « cadres », pour homogénéiser autant que possible la catégorie des « indépendant·es » que nous avons renommée comme celle des « petit·es indépendant·es ». Ces choix de recodage ont été repris de la nomenclature des PCS ménage proposée par l'Insee lors de la refonte de la nomenclature des PCS en 2018-2019 [@amosseRenovationNomenclatureSocioprofessionnelle2019].
+
+
+Le codage du niveau d'études est celui proposé par @raultHomosexualiteBisexualiteApports2019, lui même repris à l'équipe de l'enquête Contexte de la Sexualité en France (CSF, 2005-2006). Cette nouvelle variable vise à tenir compte de l'évolution du niveau des diplômes au fil des générations, deux enquêté·es d'Épic pouvant avoir jusqu'à quarante ans d'écart (Tableau \@ref(tab:corresp-nivetu)). 
+
+```{r corresp-nivetu}
+tab <- list("25-35 ans" = list("Sans diplôme, Certificat d'étude",
+                    "Brevet des collèges, BEPC, Brevet élémentaire, DNB, CAP, BEP, Baccalauréat technique",
+                    "Baccalauréat général, Diplôme de niveau Bac+2",
+                    "Diplôme supérieur à Bac+2"),
+     "36-50 ans" = list("Sans diplôme, Certificat d'étude",
+                    "Brevet des collèges, BEPC, Brevet élémentaire, DNB, CAP, BEP",
+                    "Baccalauréat technique, Baccalauréat général",
+                    "Diplôme de l'enseignement supérieur"),
+     "51-65 ans" = list("Sans diplôme",
+                    "Certificat d'étude",
+                    "Brevet des collèges, BEPC, Brevet élémentaire, DNB, CAP, BEP, Baccalauréat technique, Baccalauréat général",
+                    "Diplôme de l'enseignement supérieur")) %>%
+  rbindlist(idcol = "âge")
+
+setnames(tab, c("Âge à la passation", paste("Niveau", 1:4)))
+
+tab %>%
+    kbl(booktabs = T, escape = F, format = "latex", linesep = "", align = "lcccc",
+      caption = "Construction de la variable de niveau d'études") %>%
+  column_spec(column = 2:5, width = "3cm", latex_valign = "m") %>%
+  column_spec(column = 1, width = "2cm", bold = T) %>%
+  row_spec(0, bold = T) %>%
+  row_spec(1:2, hline_after = T) %>%
+  kable_styling(position ="center", latex_options = "HOLD_position") %>%
+  add_header_above(c(" ", "Niveau d'études" = 4), bold = T)
+```
+
+
+\clearpage
+## Compléments sur la typologie des représentations sur le couple
+
+```{r cah-illu}
+cols <- c("Sexe" = "sexer",
+          "Âge à la passation" = "ager_4cl",
+          "PCS à la passation" = "pcsr",
+          "Niveau d'études" = "niv_dipl")
+
+tab <- lapply(cols, function(v) {
+  sapply(repondant[, sort(unique(get(v)))], simplify = F,
+         function(mod) {
+           rbind(repondant[, .(clust = 0, 
+                               p = 100*wtd.mean(get(v) == mod, pond))],
+                 repondant[, .(p = 100*wtd.mean(get(v) == mod, pond)), 
+                           keyby = clust]) }) %>%
+    rbindlist(idcol = "mod") %>%
+    dcast(factor(mod, labels = formats[[v]]) ~ clust, value.var = "p")
+}) %>%
+  rbindlist(idcol = "group")
+
+tab[, as.character(0:4) := lapply(.SD, fmt_num), .SDcols = as.character(0:4)
+][, mod := capitalize(as.character(tab$mod))]
+setnames(tab, c("group", "{\\parbox{1.5cm}{ }}", cell_spec("Ensemble", bold = T), 
+                    "{Conservatrices}", "{Pragmatiques}", "{Libérales}", 
+                    "{Ne sait pas}"))
+
+tab[, -1] %>% 
+    kbl(longtable = F, booktabs = T,
+        escape = F, format = "latex",
+        caption = "Description des classes par les variables sociodémographiques (pourcentages en colonne)",
+        align = c("l", rep("d", 5))) %>% 
+    kable_styling(position ="center", 
+                  latex_options = c("hold_position")) %>%
+    pack_rows(index = table(fct_inorder(tab$group)),
+              indent = F) %>%
+      column_spec(column = 2, bold = T) %>%
+    #row_spec(0, bold=TRUE) %>%
+    add_header_above(c(" " = 2, "Représentations sur le couple" = 4),
+                     bold = T) %>%
+    footnote(general = c("Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                       sprintf("Champ : personnes âgées entre 25 et 65 ans (n = %i, avant pondération)", repondant[, .N]),
+                       gsub("%", "\\%", "Lecture : les hommes représentent 54,0% des personnes de la première classe (opinions les plus « conservatrices » sur le couple et la sexualité), et 48,6% de l'ensemble de la population.")), 
+               general_title = "", threeparttable = T)
+```
+
+\clearpage
+## La méthode des « mots spécifiques » {#motspe}
+
+La méthode dite des « mots spécifiques » est un outil probabiliste de statistique textuelle permettant d'identifier les mots privilégiés par un groupe de répondant·es par rapport aux autres. 
+
+Un mot est dit spécifique au groupe considéré lorsque le nombre d'occurrences de ce mot observé dans les mots employés par ce groupe aurait été très peu probable dans un échantillon de mots de même taille tiré aléatoirement dans le corpus (la modélisation reposant sur une loi hypergéométrique). Il est par exemple très peu probable que l'usage plus fréquent du mot « humour » chez les femmes que dans l'ensemble du corpus soit le fruit du « hasard ». Nous retenons dans ce mémoire les mots pour lesquels la probabilité d'observer, dans un échantillon de mots tiré aléatoirement, un nombre d'occurrences supérieur (ou inférieur, si le nombre est plus faible que dans l'ensemble) au nombre effectivement observé dans la catégorie considérée est inférieure à 2\%. 
+
+Du fait de cette approche probabiliste, les mots spécifiques ne font pas nécessairement partie des mots les plus ou moins utilisés par le groupe considéré. Le mot « jambes » n'est par exemple utilisé que 7 fois dans l'ensemble du corpus mais exclusivement par des hommes, ce qui en fait un mot spécifique de ce groupe. Dans le cas d'une partition binaire du corpus comme pour le sexe, les mots significativement plus utilisés par un groupe sont par construction les mots significativement moins utilisés par l'autre groupe.
+
+On se référera au sixième chapitre de @lebartStatistiqueTextuelle1994 pour une présentation détaillée de cette méthode, et à @brennetotDireEuropeTravers2013 pour un exemple d'application.
+
+\clearpage
+## Détails des résultats de l'AFC sur tableau lexical agrégé
+```{r annexe}
+## Contribution et qualité de représentation des modalités sociodémo
+l <- lapply(1:3, 
+       function(dim) {
+           dt <- as.data.table(sapply(c(2,1,3), function(i) afc$row[[i]][, dim]))
+           setnames(dt, paste0(c("contrib", "coord", "cos2"),"_", dim))
+           dt
+       })
+
+l <- lapply(
+  1:3, 
+  function(dim) {
+    dtrow <- as.data.table(sapply(c("contrib" = 2, "coord" = 1, "cos2" = 3), 
+                               function(i) afc$row[[i]][, dim])
+    )[, mod := tolower(rownames(afc$row$coord))
+    ][contrib >= mean(contrib)][order(-contrib)]
+    
+    dtcol <- as.data.table(sapply(c("contrib" = 2, "coord" = 1, "cos2" = 3), 
+                                  function(i) afc$col[[i]][, dim])
+    )[, mod := tolower(rownames(afc$col$coord))
+    ][contrib >= mean(contrib)][order(-contrib)]
+    
+    rbind(gdata::cbindX(dtrow[coord < 0, .(" " = mod, 
+                                           contrib = fmt_num(contrib, 2), 
+                                           coord = fmt_num(coord, 2), 
+                                           cos2 = fmt_num(cos2, 2))], 
+                        dtrow[coord > 0, .(" " = mod, 
+                                           contrib = fmt_num(contrib, 2), 
+                                           coord = fmt_num(coord, 2), 
+                                           cos2 = fmt_num(cos2, 2))]),
+          gdata::cbindX(dtcol[coord < 0, .(" " = mod, 
+                                           contrib = fmt_num(contrib, 2), 
+                                           coord = fmt_num(coord, 2), 
+                                           cos2 = fmt_num(cos2, 2))], 
+                        dtcol[coord > 0, .(" " = mod, 
+                                           contrib = fmt_num(contrib, 2), 
+                                           coord = fmt_num(coord, 2), 
+                                           cos2 = fmt_num(cos2, 2))])
+          )[, lapply(.SD, function(cell) fifelse(is.na(cell), " ", cell))]
+  })
+```
+
+```{r contrib1}
+l[[1]] %>%
+  kbl(format = "latex", booktabs = T, longtable = T, linesep = "",
+      align = "lccclccc", caption = "AFC sur tableau lexical aggrégé : contribution, coordonnées et qualité de représentation des modalités, par ordre de contribution décroissant - Axe 1") %>%
+  kable_styling(position ="center", latex_options = "hold_position",
+                font_size = 10) %>%
+  row_spec(1, hline_after = T) %>%
+  add_header_above(c("Coordonnées négatives" = 4, 
+                     "Coordonnées positives" = 4),
+                   bold = T, line = T) %>%
+  column_spec(column = 4, border_right = T) %>%
+  footnote(general = c("Présentations des modalités dont la contribution à l'axe est supérieure à la moyenne des contributions, les lignes et colonnes du tableau lexical étant considérées séparément."), 
+           general_title = "", threeparttable = T)
+```
+
+```{r contrib2}
+l[[2]] %>%
+  kbl(format = "latex", booktabs = T, longtable = T, linesep = "",
+      align = "lccclccc", caption = "AFC sur tableau lexical aggrégé : contribution, coordonnées et qualité de représentation des modalités, par ordre de contribution décroissant - Axe 2") %>%
+  kable_styling(position ="center", latex_options = "hold_position",
+                font_size = 10) %>%
+  row_spec(2, hline_after = T) %>%
+  add_header_above(c("Coordonnées négatives" = 4, 
+                     "Coordonnées positives" = 4),
+                   bold = T, line = T) %>%
+  column_spec(column = 4, border_right = T) %>%
+  footnote(general = c("Présentations des modalités dont la contribution à l'axe est supérieure à la moyenne des contributions, les lignes et colonnes du tableau lexical étant considérées séparément."), 
+           general_title = "", threeparttable = T)
+```
+
+```{r contrib3}
+l[[3]] %>%
+  kbl(format = "latex", booktabs = T, longtable = T, linesep = "",
+      align = "lccclccc", caption = "AFC sur tableau lexical aggrégé : contribution, coordonnées et qualité de représentation des modalités, par ordre de contribution décroissant - Axe 3") %>%
+  kable_styling(position ="center", latex_options = "hold_position",
+                font_size = 10) %>%
+  row_spec(2, hline_after = T) %>%
+  add_header_above(c("Coordonnées négatives" = 4, 
+                     "Coordonnées positives" = 4),
+                   bold = T, line = T) %>%
+  column_spec(column = 4, border_right = T) %>%
+  footnote(general = c("Présentations des modalités dont la contribution à l'axe est supérieure à la moyenne des contributions, les lignes et colonnes du tableau lexical étant considérées séparément."), 
+           general_title = "", threeparttable = T)
+```
+
+\clearpage
+## Une analyse reproductible
+
+L'ensemble des analyses statistiques présentées ont été réalisées à l'aide du logiciel R. Ce mémoire a été rédigé au format R Markdown, qui permet de combiner aisément les traitements statistiques et les éléments de rédaction dans un même document : le package `knitr` assure l'exécution du code R et la conversion vers un format Markdown classique, puis l'outil `Pandoc` assure la conversion du fichier obtenu en format LaTeX, ce dernier fichier étant finalement compilé vers le format PDF. 
+
+Tous les scripts sont disponibles en accès ouvert dans un dépôt GitHub à l'adresse https://github.com/eliotforcadell/memoire-epic. Les données de l'enquête Épic ont été obtenues auprès de l'Ined par l'intermédiaire du portail [Quetelet-Progedo-Diffusion](https://data.progedo.fr/). Seules les données relatives à la question ouverte étudiée dans le troisième chapitre ont dû être demandées directement aux concepteur·ices de l'enquête. 
+
+Les principaux packages utilisés pour l'analyse des données et la mise en forme des résultats sont :
+
+- `data.table` pour la manipulation des données, une alternative intéressante aux packages du `tidyverse` avec une syntaxe plus concise, des opérations plus rapides et une meilleure gestion de la mémoire
+- `R.temis` pour la statistique textuelle
+- `FactoMineR` pour les analyses factorielles
+- `kable`, `kableExtra`, et `modelsummary` pour la mise en forme des tableaux
+- `ggplot2`, `ggpubr`, `factoextra` et `viridis` pour la mise en forme des graphiques et la palette de couleur
+

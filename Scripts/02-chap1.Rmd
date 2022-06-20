@@ -1,0 +1,525 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+\chapter{Goûts de genre, goûts de classe}
+
+Dans le module d'Épic dédié aux opinions et représentations, huit questions successives interrogent plus particulièrement certains goûts amoureux des enquêté·es. La première, bien que proche des autres dans son contenu, se distingue par sa formulation et ses modalités de réponse : 
+
+> Pour vous personnellement, l'attirance pour le physique de quelqu'un...
+>
+> 1. ça compte surtout quand on est jeune 
+> 2. ça compte à tous les âges 
+> 3. ça n'est jamais très important  
+
+Nous mobiliserons cette question comme un indicateur de l'importance accordée aux jugements esthétiques dans le choix d'un·e partenaire ou d'un·e conjoint·e. Les sept questions suivantes sont posées selon un modèle commun, évoquant une sorte de scénario fictif dans lequel le ou la répondante est invité·e à se projeter :
+
+> Auriez vous facilement accepté l'idée d'être avec quelqu'un qui aurait été... 
+>
+> * plus grand que vous de 5 / 10 cm[^1] 
+> * plus petit que vous de 5 / 10 cm 
+> * plus âgé que vous, de 5 ans ou plus
+> * plus jeune que vous, de 5 ans ou plus 
+> * nettement plus diplômé que vous 
+> * nettement moins diplômé que vous 
+> * avec quelqu'un qui aurait eu des opinions politiques très différentes des vôtres 
+
+Les modalités de réponse étant pour chacune : 
+
+> 1. Oui, c'est justement mon cas
+> 2. Oui
+> 3. Non
+
+Proches dans leur formulation et dans leur thème, ces questions s'inscrivent toutefois dans des registres différents qu'il est intéressant de mettre en regard. Le positionnement par rapport au niveau de diplôme et aux opinions politiques renvoie à des jugements d'ordre assez explicitement social, tandis que les questions d'écart d'âge ou de taille évoquent des considérations tout à la fois sociales et esthétiques. On peut argumenter, à la manière de M. Bozon, que les appréciations liées au physique ne sont en définitive que des appréciations plus ou moins conscientisées de la position sociale de la personne jugée. Il n'en reste pas moins que la dimension esthétique intervient dans le raisonnement des individus, et doit donc être pris en compte dans l'interprétation des réponses. 
+
+Le processus d'abstraction qu'implique le passage par une relation fictive permet d'évaluer la prégnance de certaines représentations, bien que la modalité « Oui, c'est justement mon cas » laisse la possibilité à l'enquêté·e de se ramener à une situation vécue. L'usage du conditionnel associé à la tournure « accepter facilement l'idée » engage peu l'enquêté·e, qui en répondant négativement n'exprime pas un refus franc mais simplement le fait de « ne pas accepter facilement » telle ou telle situation hypothétique. De même une réponse positive exprime la tolérance plus que la recherche active d'une certaine configuration conjugale, au contraire par exemple des petites annonces matrimoniales ou des profils sur les sites de rencontre. Enfin, si les questions sont introduites par l'enquêteur·ice comme portant sur « le couple et les relations amoureuses », aucune précision supplémentaire n'est apportée à la définition de la relation, laissant toute liberté à l'enquêté·e de déterminer la nature de la relation envisagée. Par souci de concision nous parlerons par la suite de « refus » pour qualifier les réponses négatives, bien qu'il soit en pratique impossible de discerner dans les réponses un refus assumé d'un « Oui, mais difficilement ». Nous rassemblerons également les réponses « Oui » et « Oui, c'est justement mon cas », une proportion non négligeable de répondant·es ayant choisi la première modalité alors même que les caractéristiques de leur relation en cours telles que déclarées dans l'enquête auraient dû les conduire à choisir la seconde - choix difficilement interprétable à partir des seules données. Par exemple, `r repondant[!is.na(ecart_taille) & ecart_taille >= 5, pct2(wtd.mean(r_pluptt5 == 2, pond))]` des personnes étant en couple avec quelqu'un·e plus petit·e de 5 cm ou plus ont choisi la modalité « Oui » plutôt que « Oui, c'est justement mon cas », et `r repondant[!is.na(c_agec) & ager - c_agec >= 5, pct2(wtd.mean(r_plujeun == 2, pond))]` des personnes plus âgées de 5 ans ou plus que leur conjoint·e au moment de l'enquête ont également fait ce choix. 
+
+Les questions sur l'écart d'âge et de taille sont communes à l'enquête « Formation des couples » et à l'enquête Épic, et la comparaison des réponses permet d'identifier certaines tendances générales dans l'évolution de ces goûts depuis les années 1980. Les questions sur l'écart de diplôme et d'opinions politiques sont exclusives à Épic, mais permettent d'évaluer l'importance plus ou moins grande que prennent en 2014 les différents registres de goût dans le jugement amoureux. 
+
+
+[^1]: Pour les deux questions relatives à la taille, une moitié des enquêté·es tirée aléatoirement devait se positionner par rapport à un écart de 5 cm, l'autre moitié par rapport à un écart de 10 cm.
+
+
+## Écart d’âge et écart de taille : une évolution des normes depuis les années 1980 ?
+
+### Des goûts de genre qui se maintiennent...
+
+La comparaison de plusieurs enquêtes dans le temps ne conduit jamais à des conclusions certaines, du fait des multiples variations structurelles impossibles à contrôler entre les populations comparées. Sur les questions d'écart d'âge et de taille au sein du couple, les similarités entre les enquêté·es de « Formation des couples » et Épic sont toutefois suffisamment marquées pour ne pas relever d'un simple « bruit » statistique. Les marqueurs de la « domination consentie » identifiés par Bozon en 1984 n'ont en effet pas disparu en 2014 (Figure \@ref(fig:descr-opi)). 
+
+D'une part, les configurations les moins acceptées sont les mêmes : 55% des femmes et 27% des hommes refuseraient d'être dans une relation où la conjointe serait plus grande (de 5 ou 10 cm selon la question posée), 46% des femmes et 20% des hommes refuseraient d'être dans une relation où la conjointe serait plus âgée (de 5 ans ou plus), alors que les taux de refus pour les configurations inverses ne dépassent jamais 10%. L'ajout d'une variation dans l'écart de taille fictif proposé aux répondant·es d'Épic montre en outre que la part de refus augmente avec l'écart, une différence de 10 cm ou plus entre la femme et l'homme étant encore moins acceptée qu'une différence de 5 cm ou plus. D'un point de vue esthétique, le couple « bien assorti » par la taille dont parle Nicolas Herpin est un couple où la femme ne saurait dépasser l'homme de plus de quelques centimètres. 
+
+On retrouve d'autre part l'« apparente indifférence » des hommes à l'égard de ces questions qu'avait déjà constatée M. Bozon avec l'enquête de 1984 [@bozonFormationCoupleTextes2006, p. 145] : les réponses des hommes et des femmes font apparaître des normes communes, mais les femmes y semblent nettement plus attachées. Ainsi le taux de refus des situations « anormales » (conjointe plus grande ou plus âgée) est approximativement deux fois plus élevé chez les femmes. Pour M. Bozon, les hommes portent moins d'attention à ces critères car, contrairement aux femmes, leur statut social ne repose pas sur celui de leur couple. Une explication concurrente consiste à remettre en cause la capacité d'un questionnaire à saisir les préférences des hommes en matière amoureuse. Ces hypothèses sont difficilement vérifiables à partir de l'enquête Épic, mais nous verrons par la suite que d'autres travaux apportent des éléments complémentaires sur ces questions.
+
+
+```{r descr-opi, fig.cap="Refus d'être avec quelqu'un plus petit ou plus grand, plus jeune ou plus âgé, selon le sexe", fig.height=5}
+cols <- setNames(c("Plus petit·e de 5cm", "Plus grand·e de 5cm",
+                   "Plus âgé·e de 5 ans", "Plus jeune de 5 ans",
+                   "Plus petit·e de 10cm", "Plus grand·e de 10cm",
+                   "Femme plus grande", "Femme plus âgée"), 
+                 c(paste0("r_", c("pluptt5", "plugd5", 
+                                  "pluage", "plujeun", 
+                                  "pluptt10", "plugd10"), "_2cl"),
+                   "femplugde", "fempluage"))
+
+plots <- lapply(names(cols), function(v) {
+  repondant[get(v) != 9 & !is.na(get(v)), 
+            .(p = wtd.mean(get(v) == 0, pond)), by = sexer] %>%
+    ggplot(aes(x = factor(sexer, labels = formats$sexer),
+               y = p,
+               label = round(p*100, 0))) +
+    geom_bar(stat = "identity", width = 0.35, fill = plotcolours[1]) +
+    scale_fill_viridis("", discrete = "T",
+                       begin = 0.2, end = 0.8,
+                       option = "A", direction = -1) +
+    geom_text(aes(vjust = -0.25),
+              colour = "black", 
+              size = 2.5) +
+    labs(x = "", y = "", title = cols[[v]]) +
+    scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2),
+                       limits = c(0,0.8)) +
+    theme(legend.key.size = unit(0.25, "cm"),
+          legend.position = "top",
+          text = element_text(size = 9),
+          plot.title=element_text(hjust=0.5, size = 9),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks.y.left = element_line(color = "black"),
+          axis.line.y.left = element_line(color =  "lightgrey"),
+          axis.line.x.bottom = element_line(color =  "lightgrey"))
+}) 
+
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes). Les questions sur l'écart de taille n'ont\npas été posées à l'ensemble de la population mais à des sous-populations tirées aléatoirement : la moitié des répondant·es s'est exprimée\nsur un écart de 5 cm ou plus, l'autre moitié sur un écart de 10 cm ou plus.", repondant[sexer == 2, .N], repondant[sexer == 1, .N]),
+                               "Lecture : 49% des femmes refuseraient d'être avec quelqu'un de plus petit qu'elles de 5cm ou plus, et 61% des femmes refuseraient un écart\nde 10 cm ou plus. En aggrégeant ces réponses, 55% des femmes refuseraient d'être dans un couple où elles seraient significativement plus\ngrandes que leur conjoint."), just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+                         
+ggarrange(ggarrange(plotlist = plots, common.legend = T,
+                    ncol = 4, nrow = 2) %>%
+            annotate_figure(left = text_grob("%", rot = 90, size = 9)),
+          captiongrob, nrow = 2, heights = c(5,1)) 
+```
+
+
+### ...mais un relatif affaiblissement des normes
+
+La reprise presque exacte de la question de l'écart de taille entre « Formation des couples » et Épic - la première interrogeait sur le fait d'accepter facilement de *vivre* avec quelqu'un de plus grand / plus petit de 5 cm ou plus, la deuxième sur le fait d'accepter facilement d'*être* avec quelqu'un répondant à ces critères - permet de préciser la comparaison des taux de réponses négative à cette question entre 1984 et 2014. Une telle mise en regard demande cependant de délimiter des populations aussi comparables que possible. L'enquête « Formation des couples » interrogeait des personnes vivant en couple et âgées de moins de 45 ans en 1984. Si l'âge des plus jeunes répondant·es n'est pas explicité dans les différents travaux issus de cette enquête, on peut considérer qu'elles et ils étaient âgé·es de 18 ans ou plus en 1984. Un découpage par tranches d'âge autour de 45 ans, bien qu'imprécis, donne ainsi d'une part une idée de l'évolution des réponses chez les générations nées entre 1948 et 1966, interrogées lors des deux enquêtes, et permet d'autre part une comparaison entre les réponses des personnes âgées de moins de 45 ans en 1984 et en 2004. Une séparation supplémentaire est nécessaire parmi les enquêté·es d'Épic, dont une partie ne vivait pas en couple en 2014, et n'aurait donc pas été interrogée dans les conditions de la première enquête^[Parce que les comparaisons entre différentes populations dans le temps sont toujours en partie artificielles, nous avons comparé les résultats de 1984 d'une part aux personnes qui vivaient en couple à la passation d'Épic en 2014, et d'autre part aux personnes qui vivaient en couple en 1984. Si cette démarche visait à contrôler l'effet d'être en couple cohabitant au moment de répondre à l'enquête, les résultats sont en pratique très similaires entre les deux groupes.].
+
+En 1984, parmi les personnes de moins de 45 ans vivant en couple, 47% des hommes n'auraient pas facilement accepté d'être avec quelqu'un de plus grand qu'eux de 5 cm ou plus, 70% des femmes d'être avec quelqu'un de plus petit qu'elles de 5 cm ou plus. En 2014, sur une population délimitée selon les mêmes critères, ces proportions tombent à 23% chez les hommes et 51% chez les femmes (Figure \@ref(fig:comp-1984)). Si l'isolement des enquêté·es en couple cohabitant était nécessaire pour la comparaison des deux enquêtes, leurs réponses en 2014 sont en réalité très proches de celles de l'ensemble de la population étudiée dans Épic. Des tendances très similaires se retrouvent ainsi en 1984 et en 2014, mais la prégnance des normes qui s'en dégagent semble s'être atténuée entre les deux périodes.
+
+On constate par ailleurs que les taux de refus des 45-65 ans en 2014 sont beaucoup plus proches de ceux des 25-45 ans en 2014 que de ceux des personnes de leur génération en 1984. L'acceptation croissante des couples où la femme serait plus grande que l'homme relèverait ainsi davantage d'un effet de contexte que de génération, cette norme s'affaiblissant dans l'ensemble de la société. Une exception notable est le taux plus important de refus d'être avec quelqu'un de plus grand chez les jeunes hommes, alors même que les jeunes femmes ne refusent pas plus que leurs aînées d'être avec quelqu'un de plus petit, et semblent même plus ouvertes lorsqu'elles sont en couple cohabitant. Nous reviendrons plus en détail sur l'effet propre de l'âge et de la situation conjugale au moment de l'enquête dans le prochain chapitre. 
+
+Les normes d'écart d'âge et de taille se sont ainsi tangiblement affaiblies depuis les années 1980, mais se maintiennent à des niveaux qui peuvent surprendre au regard des évolutions plus larges des cadres conjugaux. Dans « Formation des couples », l'enquêté·e exprime des préférences en référence à une personne avec qui *vivre*, une définition stricte de la relation qui s'accompagne de normes toutes aussi strictes. Le questionnaire d'Épic évoque seulement le fait d'*être* avec quelqu'un, une formulation qui recouvre des formes de relation allant des plus souples au plus institutionnalisées. L'enquête ne permet pas d'étudier les goûts en fonction des aspirations individuelles au moment de la passation, mais on constate que l'assouplissement général des cadres conjugaux ne s'est pas accompagné de la disparition de préférences de genre bien ancrées.
+
+
+```{r comp-1984, fig.cap="Comparaison des opinions sur l'écart de taille au sein du couple en 1984 et en 2014"}
+params <- list(list(coha = 1, v = "r_plugd5_2cl", sexer = 1, ages = 1:2),
+               list(coha = 1, v = "r_plugd5_2cl", sexer = 1, ages = 3:4),
+               list(coha = 1, v = "r_pluptt5_2cl", sexer = 2, ages = 1:2),
+               list(coha = 1, v = "r_pluptt5_2cl", sexer = 2, ages = 3:4),
+               list(coha = 1:2, v = "r_plugd5_2cl", sexer = 1, ages = 1:2),
+               list(coha = 1:2, v = "r_plugd5_2cl", sexer = 1, ages = 3:4),
+               list(coha = 1:2, v = "r_pluptt5_2cl", sexer = 2, ages = 1:2),
+               list(coha = 1:2, v = "r_pluptt5_2cl", sexer = 2, ages = 3:4))
+
+tab84 <- data.table(sexer = 1:2,
+                    var = c("r_plugd5_2cl", "r_pluptt5_2cl"),
+                    age = c("Moins de 45 ans", "Moins de 45 ans"),
+                    p = c(0.5, 0.7))
+
+gplots84 <- lapply(1:2, function(i) {
+  tab84[sexer == i] %>%
+    ggplot(aes(x = factor(age),
+               y = p,
+               label = round(p*100, 0))) +
+    geom_bar(stat = "identity", width = 0.35,
+             fill = plotcolours[1], alpha = 0.75) +
+    geom_text(aes(vjust = -0.25),
+              colour = "black", 
+              #position = position_stack(vjust = 0.5),
+              size = 2.5) +
+    facet_wrap(~factor(age, labels = c("En couple cohab.\n1984"))) +
+    labs(x = "", y = "") +
+    scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2),
+                       limits = c(0,0.8)) +
+    theme(legend.key.size = unit(0.25, "cm"),
+          legend.position = "top",
+          text = element_text(size = 9),
+          plot.title=element_text(hjust=0.5, size = 9),
+          plot.caption = element_text(hjust = 0),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks.y.left = element_line(color = "black"),
+          axis.line.y.left = element_line(color =  "lightgrey"),
+          axis.line.x.bottom = element_line(color =  "lightgrey"),
+          plot.margin = margin(r = 0, unit = "cm"))  
+})
+
+tab14 <- lapply(params, function(param) {
+  lapply(1:4, function(i) {
+    repondant[!is.na(get(param$v)) & get(param$v) != 9 & 
+                m_coucoha %in% param$coha & sexer == param$sexer & 
+                ager_4cl == i, 
+              .(group = paste(param$coha, collapse = ""),
+                var = param$v,
+                p = wtd.mean(get(param$v) == 0, pond)), by = sexer]
+    }) %>% rbindlist(idcol = "ager_4cl")
+}) %>% rbindlist()  %>% unique()
+
+gplots14 <- lapply(1:2, function(i) {
+  tab14[sexer == i] %>%
+    ggplot(aes(x = factor(ager_4cl, labels = gsub(" ans", "", formats$ager_4cl)),
+               y = p,
+               label = round(p*100, 0))) +
+    geom_bar(stat = "identity", width = 0.35,
+             fill = plotcolours[1]) +
+    geom_text(aes(vjust = -0.25),
+              colour = "black", 
+              #position = position_stack(vjust = 0.5),
+              size = 2.5) +
+    facet_wrap(~factor(group, labels = c("En couple cohabitant - 2014", "Ensemble - 2014"))) +
+    labs(x = "Âge à la passation", y = "") +
+    scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2),
+                       limits = c(0,0.8)) +
+    theme(legend.key.size = unit(0.25, "cm"),
+          legend.position = "top",
+          text = element_text(size = 9),
+          axis.title = element_text(size = 9),
+          plot.title=element_text(hjust=0.5),
+          plot.caption = element_text(hjust = 0),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks.y.left = element_line(color = "black"),
+          axis.line.y.left = element_line(color =  "lightgrey"),
+          axis.line.x.bottom = element_line(color =  "lightgrey"))
+})
+
+captiongrob <- text_grob(paste(
+  sep = "\n",
+  "Source : « Formation des couples » (Ined, 1984) et Épic (Ined-Insee, 2014). Pourcentages pondérés.",
+  sprintf("Champ : personnes âgées de moins de 45 ans en 1984 et entre 25 et 65 ans en 2014 (effectifs non pondérés d'Épic : %i femmes\net %i hommes en couple cohabitant, %i femmes et %i hommes dans l'ensemble).", repondant[sexer == 2 & m_coucoha == 1, .N], repondant[sexer == 1 & m_coucoha == 1, .N], repondant[sexer == 2, .N], repondant[sexer == 1, .N]),
+  "Lecture : en 1984, 70% des femmes en couple cohabitant auraient refusé ou difficilement accepté d'être avec quelqu'un de plus petit\nde 5 cm ou plus."), 
+  just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+ggarrange(
+  ggarrange(cowplot::plot_grid(gplots84[[2]], gplots14[[2]], 
+                               axis = "bt", align = "h",
+                               rel_widths = c(1,4)) %>%
+              annotate_figure(left = text_grob("%", size = 9, rot = 90),
+                              top = text_grob("Femmes - Refus d'être avec quelqu'un de plus petit de 5 cm ou plus", size = 9, face = "bold")),
+            cowplot::plot_grid(gplots84[[1]], gplots14[[1]], 
+                               axis = "bt", align = "h",
+                               rel_widths = c(1,4)) %>%
+              annotate_figure(left = text_grob("%", size = 9, rot = 90),
+                              top = text_grob("Hommes - Refus d'être avec quelqu'un de plus grand de 5 cm ou plus", size = 9, face = "bold")),
+            nrow = 2),
+  captiongrob, nrow = 2, heights = c(5,1))
+```
+
+
+M. Bergström a réalisé une comparaison similaire entre « Formation des couples » et Épic sur les préférences relatives à l'âge, pour aboutir à des conclusions très proches : les configurations où la femme est plus âgée que l'homme sont nettement plus acceptées en 2014 qu'en 1984 chez les moins de 45 ans, le taux de refus d'un écart de plus de 5 ans étant similaire dans Épic au taux de refus d'un écart de 1 à 4 ans dans « Formation des couples » [@bergstromQuoiEcartAge2018]. En outre, les personnes de plus de 45 ans en 2014 et qui auraient donc pu être interrogées en 1984 n'apparaissent pas plus attachées que les autres à cette norme (Figure \@ref(fig:opi-age)), indiquant comme pour l'écart de taille que son affaiblissement n'est pas lié à un effet de génération mais à une évolution des représentations à l'échelle de la société. En parallèle de cet effet de contexte se dessine un effet d'âge, ou autrement dit de « moment » dans le cycle de vie, sur la préférence plus ou moins affirmée pour l'écart d'âge « traditionnel ». En effet, une fois pris en compte les écarts de réponses entre hommes et femmes, ce sont les plus jeunes qui refusent davantage d'être avec quelqu'un de plus jeune. Ces préférences, souvent commentées à propos des jeunes femmes qui valorisent la maturité des hommes plus âgés par rapport à celle de leur pairs, se retrouvent donc aussi - dans une bien moindre mesure et pour des motifs différents - chez les jeunes hommes. Selon une logique similaire, les femmes et les hommes les plus âgé·es refusent un peu plus que les autres d'être avec quelqu'un de plus âgé. Ainsi quel que soit le sexe, l'âge au moment de l'enquête est lié à des variations importantes dans les attentes et dans les configurations de couple dans lesquelles les répondant·es se projettent.
+ 
+
+```{r opi-age, fig.cap="Refus d'être avec quelqu'un de plus jeune ou plus âgé que soi selon l'âge à la passation de l'enquête"}
+cols <- setNames(c("Refuser d'être avec quelqu'un de plus âgé de 5 ans ou plus", 
+                   "Refuser d'être avec quelqu'un de plus jeune de 5 ans ou plus"),
+                 c("r_pluage_2cl", "r_plujeun_2cl"))
+
+gplots <- lapply(names(cols), function(v) {
+  lapply(1:2, function(i) {
+    repondant[sexer == i & !is.na(get(v)), 
+              .(p = wtd.mean(get(v) == 0, pond)), keyby = ager_4cl]
+  }) %>% rbindlist(idcol = "sexer") %>%
+    ggplot(aes(x = factor(ager_4cl, labels = formats$ager_4cl),
+               y = p,
+               label = round(p*100, 0))) +
+    geom_bar(stat = "identity", width = 0.35,
+             fill = plotcolours[1]) +
+    geom_text(aes(vjust = -0.25),
+              colour = "black", 
+              # position = position_stack(vjust = 0.5),
+              size = 2.5) +
+    facet_wrap(~factor(sexer, labels = formats$sexer)) +
+    labs(x = "Âge à la passation", y = "%", title = cols[[v]]) +
+    scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2),
+                       limits = c(0,0.8)) +
+    theme(legend.key.size = unit(0.25, "cm"),
+          legend.position = "top",
+          text = element_text(size = 9),
+          plot.title=element_text(hjust=0.5, size = 9, face = "bold"),
+          axis.title.x = element_text(size = 9),
+          plot.caption = element_text(hjust = 0),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks.y.left = element_line(color = "black"),
+          axis.line.y.left = element_line(color =  "lightgrey"),
+          axis.line.x.bottom = element_line(color =  "lightgrey"))
+}) 
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes).", repondant[sexer == 2, .N], repondant[sexer == 1, .N]),
+                               "Lecture : 19% des hommes âgés entre 25 et 34 ans refuseraient ou accepteraient difficilement d'être avec quelqu'un de plus âgé\nde 5 ans ou plus."), 
+                         just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+ggarrange(
+  ggarrange(plotlist = gplots, nrow = 2),
+  captiongrob, nrow = 2, heights = c(5,1))
+```
+
+### Des hommes moins indifférents qu'ils ne le disent ?
+
+Un aspect important derrière la notion de « domination consentie » utilisée par Bozon est la relative indifférence des hommes quant à la taille ou l'âge d'une éventuelle conjointe. La domination serait ainsi « consentie » par les femmes tout en restant impensée chez les hommes. Les réponses à « Formation des couples » et Épic concordent en ce sens, mais des travaux comme ceux de M. Bergström et M. Buscatto, qui ne s'appuient pas sur des données de questionnaires, invitent à nuancer ces résultats et à envisager l'existence de biais de déclaration genrés. 
+
+Par son accès aux données du site de rencontre *Meetic.fr*, et plus spécifiquement aux profils des utilisateur·ices et à leurs comportements de contact, M. Bergström a proposé un contrepoint intéressant aux enquêtes par questionnaires sur la question de l'écart d'âge [@bergstromQuoiEcartAge2018]. Cette source alternative, avec toutes les limites que sa méthode d'échantillonnage implique, a l'avantage de permettre l'étude de la formation des relations - et donc des goûts qui y sont mobilisés - « en situation », quand les questionnaires ne peuvent jamais que collecter des préférences formulées en dehors du cadre de la rencontre. En confrontant ainsi les préférences exprimées dans Épic à celles affichées sur le site, elle montre que la tolérance pour les écarts d'âge « inhabituels » est plus faible chez les utilisateur·ices de Meetic, et que ce décalage avec Épic est encore plus marqué chez les hommes dans la mesure où ils se montraient globalement assez indifférents à ce critère dans l'enquête. Tandis que la préférence des jeunes femmes pour les hommes plus âgés se retrouve dans les deux jeux de données, les données recueillies sur Meetic révèlent également chez les hommes un refus de plus en plus marqué après 40 ans d'être avec une femme plus âgée de 5 ans ou plus, une préférence qui ne se retrouve pas dans les réponses d'Épic. M. Bergström propose comme explication de cette incohérence « l'inégale réflexivité des deux sexes quant à leurs préférences amoureuses et sexuelles et leurs dispositions à en parler », qui signifierait finalement que « les réponses des femmes, plus tranchées, ne reflètent pas tant une attitude plus *intransigeante* vis-à-vis de l’âge du partenaire, mais avant tout des préférences plus *conscientes* » et que à l'inverse « l'indifférence manifestée par les hommes concernerait moins l'*âge* des partenaires que la *question* en tant que telle, à laquelle ils peinent peut-être à répondre (ou qu'ils ne parviennent pas à prendre au sérieux) » [@bergstromQuoiEcartAge2018, p.408].
+
+Sans avoir les moyens de les appréhender « en situation », on peut se demander si d'autres goûts amoureux, et notamment ceux relatifs à la taille de la conjointe ou du conjoint, sont sujets aux mêmes incohérences entre préférences effectives et préférences déclarées dans une enquête comme Épic, en particulier chez les hommes. L'enquête de M. Buscatto sur les femmes de très grande taille offre une perspective intéressante sur ces questions, car sans avoir la possibilité d'observer directement les dynamiques de couple, elle a pu recueillir par le biais d'entretiens et du suivi de groupes de discussion en ligne les discours des hommes sur l'écart de taille, mais rapportés par des femmes. Il apparaît alors que de nombreux hommes refusent de se mettre en couple, ou développent des « complexes » une fois en couple avec ces femmes qui les dépassent en taille [@buscattoTresGrandeTaille2022, chap. 6]. Ainsi et dans la continuité des réflexions de M. Bergström sur la différenciation genrée des capacités de réflexivité sur ce type de questions, on peut se demander si les hommes ne seraient pas davantage disposés à parler de leurs préférences dans le cadre d'une relation effectivement vécue, au contraire d'une relation fictive comme celle évoquée dans les questions d'Épic. Nous verrons toutefois que les réponses à la question ouverte sur ce qui a plu chez sa conjointe, présentées dans notre dernier chapitre, ne permet pas de confirmer cette hypothèse. 
+
+
+
+## Des logiques multiples derrière la persistance d’une « domination consentie »
+
+### L’écart de taille au sein du couple : un goût « trans-classe » ?
+
+
+La préférence, majoritairement exprimée par les femmes, pour les configurations de couple où l'homme est plus grand et plus âgé a ainsi persisté depuis les années 1980. L'interprétation univoque de M. Bozon résumée par l'expression de « domination consentie » n'apparaît cependant pas pleinement satisfaisante. Un premier point de contention réside dans la proportion non négligeable d'enquêté·es adhérant à l'une des normes sans pour autant se conformer à l'autre  (Figure \@ref(fig:opi-pcs)). Ainsi 31% des femmes refuseraient à la fois d'être avec un homme plus petit et plus jeune, mais 16% refuseraient d'être avec un homme plus jeune tout en acceptant d'être avec un homme plus petit, et 24% accepteraient d'être avec un homme plus jeune tout en refusant d'être avec un homme plus petit. De manière générale, l'adhésion à la norme d'écart de taille est plus souvent détachée de l'adhésion à la norme d'écart d'âge que l'inverse. Il est ainsi probable que ces goûts relèvent, partiellement au moins, de logiques différentes.
+
+```{r opi-pcs, fig.cap="Adhésion aux norme de l'écart de taille et d'âge au sein du couple en fonction du sexe et de la catégorie socioprofessionnelle"}
+repondant[, opi := fcase(femplugde + fempluage == 0, 1,
+                         femplugde == 1 & fempluage == 0, 2, 
+                         femplugde == 0 & fempluage == 1, 3,
+                         femplugde * fempluage == 1, 4)]
+formats$opi <- c("Refuser tout",
+                 "Refuser couple avec femme plus âgée",
+                 "Refuser couple avec femme plus grande",
+                 "Accepter tout")
+
+gplots_phy <- list()
+gplots_phy[[1]] <- lapply(
+  c(1:4),
+  function(i) repondant[!is.na(opi),
+                        .(p = wtd.mean(opi == i, pond)), 
+                        by = sexer]) %>%
+  rbindlist(idcol = "var") %>%
+  ggplot(aes(x = factor(sexer, labels = formats$sexer),
+             y = p,
+             fill = fct_rev(factor(var, labels = formats$opi)),
+             label = round(p*100, 0))) +
+  geom_bar(stat = "identity", width = 0.35) +
+  scale_fill_manual("", values = rev(plotcolours)) +
+  geom_text(colour = "white",
+            position = position_stack(vjust = 0.5),
+            size = 2) +
+  labs(x = "", y = "", title = "") +
+  scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+  theme(legend.key.size = unit(0.25, "cm"),
+        legend.position = "top",
+        legend.title = element_text(face = "bold"),
+        text = element_text(size = 9),
+        plot.title=element_text(hjust=0.5, size = 9),
+        plot.caption = element_text(hjust = 0),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks.y.left = element_line(color = "black"),
+        axis.line.y.left = element_line(color =  "lightgrey"),
+        axis.line.x.bottom = element_line(color =  "lightgrey"),
+        plot.margin = unit(c(15,0,10,0), "points"))
+
+gplots_phy[[2]] <- lapply(
+  c(1:4),
+  function(i) repondant[!is.na(opi) & pcsr != 9,
+                        .(p = wtd.mean(opi == i, pond)), 
+                        by = .(sexer, pcsr)]) %>%
+  rbindlist(idcol = "var") %>%
+  ggplot(aes(x = factor(pcsr, labels = gsub(" ", "\n", formats$pcsr[-6])),
+             y = p,
+             fill = fct_rev(factor(var, labels = formats$opi)),
+             label = round(p*100, 0))) +
+  geom_bar(stat = "identity", width = 0.35) +
+  facet_wrap(~factor(sexer, labels = formats$sexer)) +
+  scale_fill_manual("", values =  rev(plotcolours)) +
+  geom_text(colour = "white",
+            position = position_stack(vjust = 0.5),
+            size = 2) +
+  labs(x = "", y = "", title = "") +
+  scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+  theme(legend.key.size = unit(0.25, "cm"),
+        legend.position = "top",
+        text = element_text(size = 9),
+        plot.title=element_text(hjust=0.5, size = 9),
+        plot.caption = element_text(hjust = 0),
+        axis.text.x = element_text(angle = 30, vjust = 0.8),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks.y.left = element_line(color = "black"),
+        axis.line.y.left = element_line(color =  "lightgrey"),
+        axis.line.x.bottom = element_line(color =  "lightgrey"))
+
+legendgrob <- get_legend(gplots_phy[[1]])
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes). Les personnes inactives sont écartées\ndes croisements avec la catégorie socioprofessionnelle par souci d'effectifs (%i femmes et %i hommes).", repondant[sexer == 2, .N], repondant[sexer == 1, .N], repondant[sexer == 2 & pcsr == 9, .N], repondant[sexer == 1 & pcsr == 9, .N]),
+                               "Lecture : 63% des hommes accepteraient facilement d'être avec une femme plus âgée (de 5 ans ou plus) ou plus grande (de 5 cm pour\nla moitié de répondants, de 10 cm pour l'autre, les deux groupes étant ici aggrégés)."), just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+
+ggarrange(legendgrob,
+          ggarrange(plotlist = gplots_phy, widths = c(1,4),
+                    common.legend = T, legend = "none") %>%
+            annotate_figure(left = text_grob("%", rot = 90, size = 9)),
+          captiongrob, nrow = 3, heights = c(1,7,1))
+```
+
+L'analyse plus précise des réponses en fonction de la classe sociale vient conforter cette hypothèse. Dans la continuité des résultats de l'enquête de 1984, il existe une association significative entre la catégorie socioprofessionnelle^[Les catégories socioprofessionnelles identifiées dans Épic correspondent à la dernière profession exercée par l'enquêté·e, les personnes considérées inactives étant par conséquent celles n'ayant jamais exercé de profession au moment de l'enquête. Nous utilisons dans ce mémoire une variable légèrement adaptée du niveau le plus agrégé de la nomenclature traditionnelle des professions et catégories socioprofessionnelles, dont le recodage est présenté en Annexe \@ref(rec-classe).] et l'importance accordée à l'écart d'âge chez les femmes, les enquêtées cadres et dans une moindre mesure de professions intermédiaires étant relativement plus disposées que les autres à être avec un homme plus jeune qu'elles (Figure \@ref(fig:opi-pcs)). Pour reprendre l'interprétation de M. Bozon, il est possible que les femmes des classes supérieures, bénéficiant d'une plus grande stabilité matérielle, se sentent moins dépendantes du statut de leur conjoint, et prêtent donc moins d'attention à la « maturité » sociale et économique d'éventuels prétendants. Cette différenciation des goûts selon la classe ne se retrouve pourtant pas dans la préférence des femmes pour les hommes plus grands, la proportion de refus étant très similaire dans toutes les catégories socioprofessionnelles. Il apparaît donc nécessaire d'étudier séparément ces deux aspects de la « domination consentie » décrite par M. Bozon.
+
+Plus spécifiquement, on peut faire l'hypothèse que ce sont les rapports de genre plus que les rapports de classe qui sont à l'origine du maintien de la norme de l'écart de taille, expliquant ainsi la relative homogénéité des goûts féminins sur cette question. Dans son étude sur les femmes de très grande taille, M. Buscatto montre la place centrale que peut prendre la taille dans la construction d'une identité de genre. Généralement perçue comme une donnée physiologique, l'écart de taille entre les femmes et les hommes fait partie des critères ayant contribué à naturaliser des catégories de sexe socialement construites comme binaires. Il est alors complexe, pour les femmes dont la taille s'écarte significativement de la moyenne, de se trouver une place dans ces catégories rigides. L'autrice souligne ainsi que, dans la plupart des œuvres de fictions, les femmes de grande taille sont souvent associées à des caractéristiques sociales construites comme « masculines » (puissance, force, autorité, voir méchanceté dans les dessins animés). Ce traitement différencié se retrouve dans l'expérience quotidienne de ses enquêtées, qui sont perçues malgré elles comme transgressant les frontières du genre - elles sont régulièrement prises pour des hommes, des « travelos » ou des lesbiennes -, et peinent de ce fait à affirmer la féminité à laquelle elles aspirent [@buscattoTresGrandeTaille2022]. Il n'est ainsi pas surprenant que la taille représente un enjeu important au sein du couple hétérosexuel, ce modèle conjugal reposant essentiellement sur la polarité et la hiérarchisation des catégories sociales de sexe. La supériorité en taille du conjoint devient le reflet symbolique de la supériorité masculine attendue dans une relation hétérosexuelle. Pour les femmes de très grande taille interrogées par M. Buscatto, c'est la participation aux jeux et aux codes de séduction hétérosexuels qui leur permet de réaffirmer leur qualité de « vraies femmes » et les traits qui y sont associés : délicatesse, coquetterie, apparence soignée, douceur qui vient s'opposer à la virilité masculine, adoption de la posture de la « protégée » aux côtés du conjoint « protecteur » [@buscattoTresGrandeTaille2022, p.150]. Cette effort constant de revendication par les femmes de très grande taille d'une féminité dont elles sont exclues rappelle la position délicate des femmes des classes populaires anglaises décrites par B. Skeggs, en lutte avec une féminité définie comme un attribut des femmes de classes moyennes [@skeggsFormationsClassGender1997]. Ces situations relativement marginales vis-à-vis des normes dominantes permettent en retour de mieux cerner les féminités « hégémoniques » et leurs attendus. 
+
+
+### La norme du couple « bien assorti » : rapports de genre et préoccupations esthétiques
+
+En pratique, ces dynamiques de genre peuvent se traduire par un attachement au modèle du couple physiquement « bien assorti », dans un registre mêlant respect de la domination masculine et critères esthétiques. N. Herpin propose en ce sens, parmi les différentes hypothèses qu'il avance pour expliquer l'importance invariablement accordée à la taille dans le couple, une théorie selon laquelle le critère de beauté lié à la taille prendrait le pas, chez les femmes de classes supérieures, sur la recherche d'un conjoint dont la grande taille serait une promesse de réussite sociale pour le foyer [@herpinTailleHommesSon2003]. De fait, si l'attirance pour le physique est un critère important pour une grande partie de la population, ce sont les femmes et les hommes des classes supérieures qui y accordent le plus d'intérêt (Figure \@ref(fig:opi-pcs)). De nombreux travaux ethnographiques ont montré la manière dont l'apparence physique fait l'objet de soins particuliers dans les classes supérieures, tandis qu'elle représente une préoccupation plus secondaire dans les classes populaires. Ce rapport au corps est inculqué dès l'enfance au sein de la famille [@courtHabillerNourrirSoigner2014], et se retrouve par exemple dans la place cruciale réservée à la présentation de soi dans les métiers dits « d'élite » comme ceux de la haute fonction publique [@favierSeForgerCorps2021]. Un modèle de régression présenté dans le chapitre suivant montre pourtant que l'importance accordée à l'attirance pour le physique a un effet significatif sur le refus d'être dans un couple où la femme serait plus grande, et ce à catégorie socioprofessionnelle égale par ailleurs (Tableau \@ref(tab:regs-fem)). Il apparaît ainsi que lorsque les considérations esthétiques sont associées à un plus grand attachement à la norme de l'écart de taille, elles le sont quelle que soit la classe sociale. 
+
+
+```{r attiphy, fig.cap="Importance de l'attirance pour le physique selon le sexe et la catégorie socioprofessionnelle", height = 6}
+gplots_phy <- list()
+gplots_phy[[1]] <- lapply(
+  c(1:3),
+  function(i) repondant[r_attiphy != 9,
+                        .(p = wtd.mean(r_attiphy == i, pond)), 
+                        by = sexer]) %>%
+  rbindlist(idcol = "var") %>%
+  ggplot(aes(x = factor(sexer, labels = formats$sexer),
+             y = p,
+             fill = factor(var, labels = formats[["r_attiphy"]][-4]),
+             label = round(p*100, 0))) +
+  geom_bar(stat = "identity", width = 0.35) +
+  scale_fill_viridis("", 
+                     discrete = "T",
+                     begin = 0.2, end = 0.8,
+                     option = "G", direction = -1) +
+  geom_text(colour = "white",
+            position = position_stack(vjust = 0.5),
+            size = 2) +
+  labs(x = "", y = "", title = "") +
+  scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+  theme(legend.key.size = unit(0.25, "cm"),
+        legend.position = "top",
+        legend.title = element_text(face = "bold"),
+        text = element_text(size = 9),
+        plot.title=element_text(hjust=0.5, size = 9),
+        plot.caption = element_text(hjust = 0),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks.y.left = element_line(color = "black"),
+        axis.line.y.left = element_line(color =  "lightgrey"),
+        axis.line.x.bottom = element_line(color =  "lightgrey"),
+        plot.margin = unit(c(15,0,10,0), "points"))
+
+gplots_phy[[2]] <- lapply(
+  c(1:3),
+  function(i) repondant[r_attiphy != 9 & pcsr != 9,
+                        .(p = wtd.mean(r_attiphy == i, pond)), 
+                        by = .(sexer, pcsr)]) %>%
+  rbindlist(idcol = "var") %>%
+  ggplot(aes(x = factor(pcsr, labels = gsub(" ", "\n", formats$pcsr[-6])),
+             y = p,
+             fill = factor(var, labels = formats[["r_attiphy"]][-4]),
+             label = round(p*100, 0))) +
+  geom_bar(stat = "identity", width = 0.35) +
+  facet_wrap(~factor(sexer, labels = formats$sexer)) +
+  scale_fill_viridis("", discrete = "T",
+                     begin = 0.2, end = 0.8,
+                     option = "G", direction = -1) +
+  geom_text(colour = "white",
+            position = position_stack(vjust = 0.5),
+            size = 2) +
+  labs(x = "", y = "", title = "") +
+  scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+  theme(legend.key.size = unit(0.25, "cm"),
+        legend.position = "top",
+        text = element_text(size = 9),
+        plot.title=element_text(hjust=0.5, size = 9),
+        plot.caption = element_text(hjust = 0),
+        axis.text.x = element_text(angle = 30, vjust = 0.8),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks.y.left = element_line(color = "black"),
+        axis.line.y.left = element_line(color =  "lightgrey"),
+        axis.line.x.bottom = element_line(color =  "lightgrey"))
+
+
+legendgrob <- get_legend(gplots_phy[[1]])
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes). Les personnes inactives sont écartées\ndes croisements avec la catégorie socioprofessionnelle par souci d'effectifs (%i femmes et %i hommes).", repondant[sexer == 2, .N], repondant[sexer == 1, .N], repondant[sexer == 2 & pcsr == 9, .N], repondant[sexer == 1 & pcsr == 9, .N]),
+                               "Lecture : 19% des hommes considèrent que l'attirance pour le physique de quelqu'un n'est jamais très importante dans le cadre d'une relation\namoureuse."), just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+
+ggarrange(legendgrob,
+          ggarrange(plotlist = gplots_phy, widths = c(1,4),
+                    common.legend = T, legend = "none") %>%
+            annotate_figure(left = text_grob("%", rot = 90, size = 9)),
+          captiongrob, nrow = 3, heights = c(1,7,1)) %>%
+  annotate_figure(text_grob("L'attirance pour le physique de quelqu'un...", just = "top", size = 9, face = "bold"))
+```
+
+
+## Peu d’importance accordée au niveau de diplôme, mais une plus grande attention aux divergences politiques chez les plus diplômé·es 
+
+L'enquête Épic permet d'enrichir la compréhension de ce qui compte et ne compte pas dans le « choix » d'un·e conjoint·e en s'intéressant, en complément des différences de taille et d'âge, aux écarts de diplômes et d'opinions politiques.
+
+Au contraire de l'âge et de la taille, peu de personnes considèrent le diplôme comme un critère de choix dans le cadre d'une relation amoureuse (seuls 14% n'accepteraient pas facilement d'être avec quelqu'un de moins diplômé, 9% avec quelqu'un de plus diplômé). Le seul écart notable est la plus grande proportion de femmes refusant d'être avec un homme moins diplômé qu'elles (18% contre 10% des hommes). Comme pour l'âge et la taille, cette différence peut être interprétée comme une « domination consentie » par les femmes, celles-ci recherchant davantage des hommes de condition sociale supérieure - dont le niveau de diplôme serait ici le reflet. Ce marqueur semble cependant beaucoup moins important que la taille ou le genre, et ce faible poids interroge sur les spécificités des femmes qui en font un critère dans leurs choix conjugaux. De manière attendue, le niveau d'études^[La variable de niveau d'études mobilisée dans ce mémoire est reprise à @raultHomosexualiteBisexualiteApports2019 et vise à contrôler l'évolution de la valeur des diplômes au fil des générations. Le détail de son recodage est présenté en Annexe \@ref(rec-classe).] permet d'expliquer une partie de la variation des réponses, bien que cette corrélation soit assez peu marquée et surtout présente chez les femmes. Les femmes peu ou pas diplômées sont celles à l'avis le plus tranché, acceptant moins à la fois d'être avec quelqu'un de plus diplômé et de moins diplômé qu'elles. On peut toutefois s'interroger sur le sens que donnent des enquêté·es ne possédant aucun diplôme à la formulation « moins diplômé·e que vous ». Chez les autres femmes, l'acceptation d'être avec quelqu'un de plus diplômé que soi baisse à mesure que le niveau d'études augmente. Cette tendance pourrait indiquer une réticence chez les femmes plus diplômées à se trouver en position dominante au sein du couple, selon la logique de la « domination consentie ». Alternativement, on peut y voir une recherche explicite d'homogamie de diplôme, dans le but de trouver quelqu'un aux qualités intellectuelles espérées (nous verrons dans le troisième chapitre que l'intelligence et la culture sont des qualités particulièrement valorisées par les membres des classes supérieures dans leurs relations amoureuses), ou encore un homme familier de modèles conjugaux plus égalitaires. Sans revenir à un raisonnement en termes de « préférences révélées », on peut par exemple noter que l'homogamie de diplôme se renforce chez les diplômé·es des grandes écoles, alors qu'elle tend à diminuer dans le reste de la population [@bouchet-valatEvolutionsHomogamieDiplome2014].
+
+La dissemblance des opinions politiques est plus clivante que celle du diplôme, puisque 37% de la population interrogée n'accepterait pas facilement d'être avec quelqu'un aux opinions très différentes des siennes. La proportion de refus est une nouvelle fois plus élevée chez les femmes (41% contre 33% chez les hommes), un écart cohérent au vu de l'« indifférence » déjà remarquée chez les hommes, mais plus surprenant sur un sujet souvent associé au masculin comme peut l'être la politique. De manière générale les compétences et le sentiment de légitimité à s'exprimer sur des questions politiques n'est pas distribué uniformément dans l'espace social [@bourdieuOpinionPubliqueExiste1973]. On note en ce sens que cette question sur les divergences politiques est celle qui a suscité le plus grand nombre de non réponses (entre 4,6% de « ne sait pas », contre un peu plus de 1% pour les autres questions), notamment chez les femmes (5,4%, contre 3,8% chez les hommes), et chez les moins diplômé·es (8,6% au niveau d'études le plus bas contre 3,1% au niveau le plus haut). De même, ce sont les personnes les plus diplômées, c'est-à-dire les personnes les plus politisées et les plus à même d'exprimer un avis sur la vie politique du pays, qui accordent le plus d'importance au positionnement politique d'un·e éventuel·le conjoint·e (Figure \@ref(fig:opi-dipl)). Ce type de préférence est communément étudiée sous l'angle de la couleur politique, les personnes se déclarant « de gauche » étant notamment plus réticentes à se mettre en couple avec des personnes aux opinions différentes [@muxelPolitiqueAtelleSa2021]. Bien qu'Épic interroge ses enquêté·es sur leur positionnement politique, nous décidons de ne pas explorer cette dimension. Il est en effet toujours délicat de recueillir ce type d'information par le biais d'un questionnaire, d'autant plus lorsque la thématique principale de l'enquête peut paraître très éloignée de ces questions aux yeux des répondant·es. Nous chercherons plutôt à identifier d'éventuelles logiques communes avec les préférences d'âge, de taille et de diplôme, et notamment le lien entre ces préférences et des visions différenciées du couple.
+
+
+```{r opi-dipl, fig.cap="Refus d'être avec quelqu'un de plus diplômé, moins diplômé, ou avec des opinions politiques très différentes, selon le sexe et le niveau d'études"}
+cols <- setNames(c("Plus diplômé·e", "Moins diplômé·e", 
+                   "Op. politiques diff."), 
+                  paste0("r_", c("pludipl", "moindipl", 
+                                 "oppoldif"), "_2cl"))
+
+gplots <- lapply(names(cols), function(v) {
+  lapply(1:2, function(i) {
+    repondant[sexer == i & !is.na(get(v)), 
+              .(p = wtd.mean(get(v) == 0, pond)), keyby = niv_dipl]
+  }) %>% rbindlist(idcol = "sexer") %>%
+    ggplot(aes(x = factor(niv_dipl, 
+                          labels = gsub("Niveau", "Niv.", formats$niv_dipl)),
+               y = p,
+               label = round(p*100, 0))) +
+    geom_bar(stat = "identity", width = 0.35,
+             fill = plotcolours[1]) +
+    geom_text(aes(vjust = -0.25),
+              colour = "black", 
+              size = 2.5) +
+    facet_wrap(~factor(sexer, labels = formats$sexer)) +
+    labs(x = "", y = "", title = cols[[v]]) +
+    scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2),
+                       limits = c(0,0.8)) +
+    theme(legend.key.size = unit(0.25, "cm"),
+          legend.position = "top",
+          text = element_text(size = 9),
+          plot.title=element_text(hjust=0.5, size = 9, face = "bold"),
+          plot.caption = element_text(hjust = 0),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks.y.left = element_line(color = "black"),
+          axis.line.y.left = element_line(color =  "lightgrey"),
+          axis.line.x.bottom = element_line(color =  "lightgrey"))
+}) 
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes).", repondant[sexer == 2, .N], repondant[sexer == 1, .N]),
+                               "Lecture : 12% des hommes au niveau d'études le plus bas accepteraient difficilement ou refuseraient d'être avec quelqu'un de plus\ndiplômé qu'eux."), just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+ggarrange(ggarrange(plotlist = gplots, common.legend = T),
+          captiongrob, nrow = 2, heights = c(10,1))
+```
+
+\clearpage
+
+Prenant en compte l'ensemble de ces réflexions, nous chercherons dans le chapitre suivant à identifier les différents registres pouvant intervenir, « toutes choses égales par ailleurs », dans la formation des goûts amoureux. Sans négliger l'influence des conditions sociales dans ce que nous pouvons désigner comme des « goûts de classe », nous explorerons des pistes complémentaires susceptibles d'expliquer la persistance d'une préférence comme celle de l'écart de taille - préférence qui semble précisément résister aux enjeux de classe. Nous examinerons notamment l'association de ces goûts avec différentes représentations du couple et de la sexualité, ainsi que l'éventuelle influence des biographies conjugales et sexuelles.

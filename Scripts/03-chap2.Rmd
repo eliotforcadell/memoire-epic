@@ -1,0 +1,461 @@
+\chapter{Goûts, représentations sur le couple, et biographie conjugale et sexuelle}
+
+## Des représentations sur le couple aux goûts amoureux
+
+### Typologogie des représentations sur les relations amoureuses et sexuelles
+
+Une manière d'expliquer une certaine prise de recul face aux normes encore bien ancrées que sont l'écart d'âge et l'écart de taille dans les relations hétérosexuelles consiste à s'intéresser aux opinions plus générales sur le couple, suivant l'hypothèse qu'une vision plus « progressiste » de la relation de couple irait de pair avec une émancipation plus aisée des marqueurs de domination masculine dans le cadre conjugal. Nous nous appuyons pour cela sur une série de six affirmations face auxquelles les enquêté·es d'Épic devaient se positionner, suivant une échelle allant de « Tout à fait d'accord » à « Pas du tout d'accord » :
+
+- On peut réussir sa vie sans vivre en couple
+- Être en couple c'est tout faire ensemble 
+- Se séparer c'est forcément mauvais pour les enfants
+- On peut aimer quelqu'un et avoir des aventures à côté
+- On peut avoir des rapports sexuels avec quelqu'un sans l'aimer
+- On peut être amoureux de plusieurs personnes en même temps
+
+Si l'ensemble de ces affirmations aurait été peu accepté il y a quelques décennies, certaines apparaissent aujourd'hui assez consensuelles, tandis que d'autres restent largement contestées (Figure \@ref(fig:opi-couple)). Une majorité d'enquêté·es expriment ainsi leur accord avec l'idée qu'on puisse réussir sa vie sans être en couple et qu'une séparation n'est pas toujours mauvaise pour les enfants, mais les aventures extraconjugales et le fait d'être amoureux·se de plusieurs personnes en même temps ne recueillent qu'une faible approbation. Certaines propositions se distinguent également par une nette différenciation genrée des réponses. C'est le cas par exemple des rapports sexuels sans sentiments amoureux, moins largement plébiscités par les femmes, ou encore des effets néfastes d'une séparation pour les enfants, qui semblent inquiéter davantage les hommes.
+
+```{r opi-couple, fig.cap="Opinions générales sur le couple selon le sexe"}
+cols <- setNames(paste0("r_",
+                        c("reussir", "fairens", "sepenf", 
+                          "aventur", "rapsex", "pluamo"),
+                        "_2cl"), 
+                 paste0(1:6, "."))
+
+repondant[, c(cols) := lapply(.SD, 
+                              function(v) fcase(v %in% 1:2, 1L,
+                                                v %in% 3:4, 0L,
+                                                v == 9, 9L)), 
+          .SDcols = gsub("_2cl", "", cols)]
+
+gplots <- lapply(gsub("_2cl", "", cols), function(v) {
+  lapply(1:4, 
+         function(i) repondant[get(v) != 9, 
+                               .(p = wtd.mean(get(v) == i, pond)), 
+                               by = sexer]) %>%
+    rbindlist(idcol = "var") %>%
+    ggplot(aes(x = factor(sexer, labels = formats$sexer),
+               y = p,
+               fill = factor(var, labels = c("Tout à fait d'accord",
+                                             "Plutôt d'accord", 
+                                             "Plutôt pas d'accord",
+                                             "Pas du tout d'accord")), 
+               label = round(p*100, 0))) +
+    geom_bar(stat = "identity", width = 0.35) +
+    scale_fill_viridis("", discrete = "T",
+                       begin = 0.2, end = 0.8,
+                       option = "A", direction = -1) +
+    geom_text(colour = "white", 
+              position = position_stack(vjust = 0.5),
+              size = 2) +
+    labs(x = "", y = "%", 
+         title = names(which(cols == paste0(v, "_2cl")))) +
+    scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+    theme(legend.key.size = unit(0.25, "cm"),
+          legend.position = "top",
+          text = element_text(size = 8),
+          plot.title=element_text(hjust=0.5, size = 8),
+          plot.caption = element_text(hjust = 0),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.ticks.y.left = element_line(color = "black"),
+          axis.line.y.left = element_line(color =  "lightgrey"),
+          axis.line.x.bottom = element_line(color =  "lightgrey"))
+}) 
+
+legendgrob <- get_legend(gplots[[1]])
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes).", repondant[sexer == 2, .N], repondant[sexer == 1, .N]),
+                               "Lecture : 14% des hommes ne sont pas du tout d'accord avec l'affirmation qu'on peut réussir sa vie sans vivre en couple."), just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+intitulegrob <- ggarrange(
+  plotlist = lapply(
+    c("1. On peut réussir sa vie\n    sans être en couple.\n",
+      "2. Être en couple, c'est\n    tout faire ensemble.\n",
+      "3. Se séparer, c'est forcément\n    mauvais pour les enfants.\n",
+      "4. On peut aimer quelqu'un et\n    avoir des aventures à côté.\n",
+      "5. On peut avoir des rapports\n    sexuels avec quelqu'un\n    sans l'aimer.\n",
+      "6. On peut être amoureux\n    de plusieurs personnes\n    en même temps."),
+    function(inti) text_grob(inti, just = c("left", "center"), 
+                             size = 8, x = 0.05, y = 0.7, lineheight = 1)),
+    nrow = 6) +
+  theme(plot.margin = unit(c(50,10,40,10), "points"))
+
+ggarrange(ggarrange(legendgrob,
+                    ggarrange(plotlist = gplots, legend = "none"),
+                    captiongrob, nrow = 3, heights = c(1,10,1)),
+          intitulegrob, ncol = 2, widths = c(2.5,1))
+```
+
+
+```{r cah}
+cols <- c("reussir", "fairens", "sepenf", 
+          "aventur", "rapsex", "pluamo")
+
+repondant[, c(cols) := lapply(.SD, factor, labels = c("non", "oui", "nsp")),
+          .SDcols = paste0("r_", cols, "_2cl")]
+
+df_acm <- repondant[, data.frame(.SD, row.names = ident_men), .SDcols = cols]
+
+res_acm <- MCA(df_acm, ncp = 3, graph = FALSE)
+res_cah <- HCPC(res_acm, nb.clust = 4, consol = TRUE, graph = F)
+
+repondant[data.table(ident_men = rownames(res_cah$data.clust),
+                     clust = res_cah$data.clust$clust),
+          clust := i.clust, on = "ident_men"]
+formats$clust <- c("Conservatrices", "Pragmatiques", "Libérales", "Sans avis")
+```
+
+
+```{r cah-descr}
+cols <- c("Réussir sa vie sans vivre en couple" = "reussir",
+          "Être en couple, c’est tout faire ensemble" = "fairens", 
+          "Séparation forcément mauvaise pour les enfants" = "sepenf", 
+          "Aimer quelqu’un et avoir des aventures à côté" = "aventur", 
+          "Avoir des rapports sexuels avec quelqu’un sans l’aimer" = "rapsex", 
+          "Être amoureux de plusieurs personnes en même temps" = "pluamo")
+
+
+tab <- lapply(cols, function(v) {
+  sapply(c("oui", "non", "nsp"), simplify = F,
+         function(mod) {
+           rbind(repondant[, .(clust = 0, 
+                               p = 100*wtd.mean(get(v) == mod, pond))],
+                 repondant[, .(p = 100*wtd.mean(get(v) == mod, pond)), 
+                           keyby = clust]) }) %>%
+    rbindlist(idcol = "mod") %>%
+    dcast(factor(mod, levels = c("oui", "non", "nsp")) ~ clust, value.var = "p")
+}) %>%
+  rbindlist(idcol = "group")
+
+tab[, as.character(0:4) := lapply(.SD, fmt_num), .SDcols = as.character(0:4)
+][, mod := capitalize(as.character(tab$mod))]
+setnames(tab, c("group", "{\\parbox{1.5cm}{ }}", cell_spec("Ensemble", bold = T), 
+                    "{Conservatrices}", "{Pragmatiques}", "{Libérales}", 
+                    "{Sans avis}"))
+
+tab[, -1] %>% 
+    kbl(longtable = F, booktabs = T,
+        escape = F, format = "latex",
+        caption = "Description des classes par les variables actives (pourcentages en colonne)",
+        align = c("l", rep("d", 5))) %>% 
+    kable_styling(position ="center", 
+                  latex_options = c("hold_position")) %>%
+    pack_rows(index = table(fct_inorder(tab$group)),
+              indent = F) %>%
+      column_spec(column = 2, bold = T) %>%
+    add_header_above(c(" " = 2, "Représentations sur le couple" = 4),
+                     bold = T) %>%
+    footnote(general = c("Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                       sprintf("Champ : personnes âgées entre 25 et 65 ans (n = %i, avant pondération)", repondant[, .N]),
+                       gsub("%", "\\%", "Lecture : 42,9% des personnes de la première classe, aux opinions les plus « conservatrices » sur le couple, estiment qu'on peut réussir sa vie sans être en couple, contre 70,0% dans l'ensemble de la population.")), 
+               general_title = "", threeparttable = T)
+```
+
+Nous avons mobilisé des méthodes d'analyses factorielles afin de résumer ces réponses en un indicateur synthétique. Après avoir regroupé entre elles les modalités de réponses positives et négatives, une analyse des correspondances multiples (ACM) à fait ressortir trois axes particulièrement structurants. Une classification ascendante hiérarchique (CAH) réalisée sur les coordonnées de ces axes^[La proximité entre individus sur les trois dimensions a été évaluée par la distance euclidienne, et l'agrégation des groupes a été réalisée selon la méthode de Ward. La classification ainsi obtenue est consolidée par la méthode des K-means.] a finalement permis de définir une typologie en quatre classes de représentations sur le couple (Tableau \@ref(tab:cah-descr)). La première, qualifiée de « conservatrice », rassemble 37% de la population totale, et se distingue par une forte valorisation du couple et de sa longévité (couple nécessaire pour réussir sa vie, définition fusionnelle, et séparation inévitablement mauvaise pour les enfants). Le deuxième groupe regroupe également 37% de la population, et adopte une position plus distancée par rapport à cette vision du couple (il est possible de réussir ça vie sans être en couple, être en couple ne signifie pas tout faire ensemble, et une séparation n'est pas toujours mauvaise pour les enfants), sans pour autant accepter une dissociation entre relation conjugale (exclusive), sentiments et sexualité. Par souci de concision nous qualifions cette classe de « pragmatique », ce pragmatisme consistant à accorder une place relativement secondaire à la relation de couple. Le troisième groupe est plus réduit en effectif (23% de la population), et exprime les avis les plus rares en se prononçant majoritairement en faveur d'une ouverture des relations, notamment sur le plan sexuel, tout en prenant relativement moins de recul que le deuxième groupe sur l'importance de la vie de couple et le caractère néfaste d'une séparation pour les enfants. À défaut de terme plus approprié nous qualifions cette classe de « libérale », en gardant à l'esprit que cette libéralité concerne essentiellement la dissociation entre conjugalité et sexualité. Enfin une dernière classe, très minoritaire (2,6% de la population), rassemble les enquêté·es ne s'étant pas prononcé·es sur la plupart des questions. 
+
+Ces groupes sont fortement structurés par le genre^[La distribution des classes selon les principales caractéristiques sociodémographiques est présentée en annexe (Tableau \@ref(tab:cah-illu))] - les hommes exprimant des opinions plus « conservatrices » ou allant dans le sens d'une dissociation entre conjugalité et sexualité, les femmes étant au contraire plus nombreuses dans le groupe « pragmatique ». Les variations selon le niveau d'études et la catégorie socioprofessionnelle sont également très marquées, les personnes les moins diplômées ou issues des classes populaires étant notamment sur-représentées dans la classe conservatrice. Les générations les plus âgées sont sur-représentées dans le groupe le plus conservateur, mais les positions les moins attachées à l'exclusivité sexuelle et amoureuse au sein du couple sont présentes en proportions similaires dans toutes les tranches d'âges. Les personnes les plus âgées sont par ailleurs, avec les moins diplômées, les plus présentes dans la classe des non-répondant·es. Ces grandes lignes de partage n'épuisent cependant pas entièrement l'intérêt explicatif de cette typologie de représentations.
+
+### Chez les femmes, un rapport différencié à l'hétérogamie d'âge, de taille et d'opinions politiques selon la vision du couple
+
+
+Nous choisissons en effet d'introduire cette typologie des représentations comme une variable explicative dans quatre modèles de régression portant sur le refus d'être dans une relation où la femme serait plus âgée, où la femme serait plus grande, où le ou la conjoint·e serait moins diplômé·e, et où il existerait des divergences d'opinions politiques importantes entre les deux conjoint·es. Nous cherchons ainsi à étudier les liens entre représentations et préférences « pratiques » (bien qu'elles restent de l'ordre du déclaratif), tout en contrôlant l'effet des variables sociodémographiques présentées dans le chapitre précédent (Tableaux \@ref(tab:regs-fem) et \@ref(tab:regs-hom)).
+
+Ces liens apparaissent principalement chez les femmes. Les enquêtées aux idées les plus conservatrices sur le couple vont par exemple davantage refuser d'être avec un homme plus jeune que les enquêtées « pragmatiques », tandis que les enquêtées plus ouvertes à la dissociation entre conjugalité et sexualité montrent au contraire moins de réticences à être plus âgées qu'un conjoint potentiel. Nous avons vu précédemment que la plus faible adhésion à la norme de l'écart d'âge chez les femmes des classes supérieures pouvait être expliquée par une autonomie économique plus importante. Après avoir contrôlé cet effet de classe, on constate donc également une association entre le refus de la norme d'écart d'âge et l'affirmation d'idées « progressistes » sur le lien entre couple et sexualité. Cette association ne se retrouve pas sur la question de l'écart de taille : aucun type de représentations n'est lié plus qu'un autre au refus d'une configuration où la conjointe serait plus grande. Goût « trans-classe », la norme de l'homme plus grand apparaît également imperméable à la libéralisation des discours sur le couple. Au regard des variables introduites dans le modèle, c'est finalement l'importance accordée à l'attirance pour le physique du conjoint qui permet le mieux d'expliquer les variations dans l'adhésion à la norme de l'écart de taille, les femmes déclarant accorder peu d'importance à l'attirance pour le physique y étant nettement moins attachées. Ce résultat est cohérent avec l'hypothèse selon laquelle la préoccupation esthétique du couple « bien assorti » constitue une dimension importante de cette préférence de taille. Le refus d'être avec un conjoint aux opinions politiques très différentes est davantage affecté par les représentations sur le couple, selon une logique systématiquement inverse à celle observée pour la différence d'âge : les femmes aux idées les plus conservatrices acceptent plus facilement une différence d'opinions politiques que celles aux positions « pragmatiques », tandis que les femmes plus ouvertes à la dissociation entre conjugalité et sexualité tolèrent plus difficilement les désaccords politiques au sein du couple. À classes sociales égales par ailleurs, le fait d'accorder de l'importance aux questions politiques dans la sphère conjugale apparaît donc associé, chez les femmes, à des représentations sur le couple et la sexualité éloignées des injonctions de genre traditionnelles. Enfin, le refus d'être avec un homme moins diplômé, généralement rare sur l'ensemble des réponses, présente des tendances plus difficiles à analyser. Si les femmes des classes populaires, au niveau d'études souvent peu élevé, s'opposent moins que les autres à être avec quelqu'un de moins diplômé qu'elles, ce sont les femmes aux positions les plus conservatrices sur la vie de couple qui refusent davantage cet écart de niveau scolaire.
+
+Chez les hommes, la typologie des représentations sur le couple a un pouvoir explicatif beaucoup plus faible, tout comme la classe sociale. La seule tendance marquée réside dans l'attachement plus important à la norme de l'écart d'âge chez les plus conservateurs, confirmant une association déjà observée chez les femmes. Sur la question de l'écart de taille, les différences de représentations générales sur le couple n'affectent pas davantage la position des hommes que celle des femmes. On retrouve chez eux une préférence qui semble principalement motivée par des considérations esthétiques, l'acceptation d'être avec une femme plus grande étant de nouveau associée à une moindre importance accordée à l'attirance pour le physique. Par ailleurs, l'absence de lien entre la typologie des représentations et l'acceptation ou le refus de désaccords politiques au sein du couple est d'autant plus intéressant que ce lien existe chez les femmes. L'absence de variations chez les hommes ne peut être ici attribué à leur relative indifférence, dans la mesure où cette question a suscité un nombre important de prises de position négatives, presque à la hauteur du taux de refus des femmes (Figure \@ref(fig:opi-dipl)). Une piste d'explication pourrait être que les « opinions politiques » évoquées dans l'intitulé de la question ne sont pas envisagées de la même manière par les répondantes et par les répondants. La « deuxième vague » féministe qui naît en France dans les années 1970 a eu pour objet principal de faire de l'intime, et surtout celui des femmes, un sujet politique. Cette politisation a été portée par une lutte centrale pour le droit à l'avortement, mais également par un ensemble de revendications secondaires visant à mettre au jour les mécanismes de domination masculine à l'œuvre dans de multiples aspects du quotidien - et en particulier dans le cadre des relations hétérosexuelles [@bardDictionnaireFeministesFrance2017]. L'exposition à ces discours de plus en plus courants dans l'espace public depuis cette époque peut avoir eu une influence sur l'adoption par certaines femmes de positions plus libérales par rapport au couple, notamment dans des domaines souvent réservés au masculin comme la sexualité. Il est alors probable que leur refus de se mettre en couple avec un homme ne partageant pas leurs convictions politiques soit en partie motivé par ces considérations. Les hommes, se sentant moins directement concernés, dissocieraient à l'inverse plus facilement leur vie quotidienne et intime d'une sphère politique définie pour eux de manière plus « traditionnelle ».
+
+
+## Modulation des goûts selon le parcours et la situation conjugale
+
+### Une association genrée entre nombre de partenaires sexuel·les et adhésion aux normes dominantes
+
+Une dernière dimension permettant d'affiner la compréhension des goûts intervenant dans le choix d'un·e partenaire ou d'un·e conjoint·e est l'étude du parcours relationnel et de la situation conjugale actuelle, selon l'hypothèse que les expériences personnelles contribuent à la formation des goûts, aux côtés des socialisations de genre, de classe, et de l'exposition à un ensemble de discours sur les relations de couple.
+
+Le nombre de partenaires sexuel·les déclaré par les enquêté·es apporte une sorte de contrepoint « pratique » aux représentations plus libérales sur le plan de la sexualité identifiées dans notre typologie. Il s'agit cependant d'une donnée délicate à étudier car elle est fortement sujette aux biais de déclaration : les hommes déclarent invariablement plus de partenaires que les femmes, sans que cette différence puisse s'expliquer de manière factuelle - la piste d'un recours plus fréquent chez les hommes aux services de travailleur·euses du sexe n'est par exemple pas satisfaisante en termes d'ordre de grandeur [@lagrangeNombrePartenairesSexuels1991; @leridonNombrePartenairesCertain2008]. Comme le suggère le travail de Florence Maillochon sur les discours des adolescent·es au début de leur vie amoureuse et sexuelle, la manière d'évoquer et de dénombrer ses partenaires, et donc l'explication d'une sous ou sur-déclaration, serait liée à des injonctions de genre fortement présentes dès cet âge. Alors que les jeunes hommes doivent faire montre de leur expérience et jouent ainsi d'une politique du nombre, les jeunes femmes sont plus réflexives sur leur parcours et hiérarchisent leurs relations selon des classements constamment renouvelés qui peuvent mener à l'éviction d'histoires jugées trop peu sérieuses [@maillochonDireFaireEvolution2003]. On voit ainsi apparaître l'envers de l'indifférence masculine relevée dans le chapitre précédent : alors qu'ils sont socialisés à se détacher des enjeux affectifs des relations amoureuses, les hommes se sentent davantage concernés par une question comme celle du nombre de partenaires sexuelles qui met en jeu leur virilité. Les femmes s'efforcent au contraire de réorienter la question dans le domaine des sentiments, et de s'éloigner ainsi de l'idée socialement réprouvée d'une sexualité féminine trop libérée. 
+
+Épic ne déroge pas à la règle^[Malgré le protocole de collecte spécifique pour cette question (les enquêté·es ne donnaient pas oralement le nombre de leurs partenaires mais l'écrivaient directement sur l'ordinateur de l'enquêteur·ice), près de 8% des personnes interrogées n'ont pas souhaité répondre. Pour limiter le nombre de données manquantes, nous utilisons ici les valeurs imputées par les concepteur·ices de l'enquête à partir des profils sociodémographiques des non-répondant·es [@raultHomosexualiteBisexualiteApports2019].], les réponses à cette question montrant une nette incohérence entre les déclarations des hommes et des femmes (Figure \@ref(fig:nbpart)). À cet écart s'ajoutent des variations importantes et connues selon l'âge et la classe des enquêté·es, sans qu'on puisse déterminer avec certitude la part de biais de déclaration et la part de différenciation effective des pratiques. Ainsi les femmes de plus de 55 ans au moment de l'enquête ont déclaré un nombre plus faibles de partenaires que les autres, tandis que cette écart entre générations ne se retrouve pas chez les hommes. Le compte des partenaires suit également un gradient assez marqué selon la classe, les cadres déclarant le plus de partenaires. Nous ne distinguons pas ici les partenaires de même sexe et de sexe opposé, notamment parce que les pratiques homosexuelles sont minoritaires chez les personnes qui n'ont déclaré que des relations importantes hétérosexuelles. Ces pratiques sont pourtant liées à des profils bien particuliers, comme l'ont montré Wilfried Rault et Camille Lambert dans une note de recherche sur les données d'Épic : elles sont plus fréquentes (ou davantage déclarées) chez les jeunes générations et les plus diplômé·es, et les personnes ayant déclaré ces pratiques adhèrent plus que les autres aux représentations dissociant sexualité et conjugalité [@raultHomosexualiteBisexualiteApports2019]. On peut alors supposer que l'introduction dans nos modèles « toutes choses égales par ailleurs » de l'âge à la passation de l'enquête, de la catégorie socioprofessionnelle, et de la typologie des représentations présentées précédemment, permette de capter ces spécificités.
+
+
+
+
+```{r verif-homo, eval=FALSE}
+repondant[, h_nbpart_het := fifelse(sexer == 1, h_nbfem_imp, h_nbhom_imp)]
+repondant[, h_nbpart_het_4cl := fcase(h_nbpart_het <= 1, 1,
+                                      h_nbpart_het > 1 & h_nbpart_imp <= 4, 2,
+                                      h_nbpart_het > 4 & h_nbpart_imp <= 9, 3,
+                                      h_nbpart_het >= 10, 4)]
+formats$h_nbpart_het_4cl <- formats$h_nbpart_4cl
+mycrosstab(repondant, sexer, h_nbpart_het_4cl, pond)
+mycrosstab(repondant, sexer, h_nbpart_4cl, pond)
+
+repondant[sexer == 1, freq(h_nbhom_imp != 0, pond)]
+repondant[sexer == 2, freq(h_nbfem_imp != 0, pond)]
+```
+
+
+```{r nbpart, fig.cap="Nombre de partenaires sexuel·les selon l'âge à la passation de l'enquête et la PCS", fig.width=8}
+
+tab <- lapply(1:4, 
+       function(i) repondant[, .(p = wtd.mean(h_nbpart_4cl == i, pond)), 
+                             keyby = .(sexer, ager_4cl)]) %>%
+  rbindlist(idcol = "h_nbpart_4cl")
+
+p1 <- ggplot(tab, aes(x = factor(ager_4cl, labels = gsub(" ans", "", formats$ager_4cl)), 
+                y = p,
+                fill = fct_rev(factor(h_nbpart_4cl, labels = formats$h_nbpart_4cl)),
+                label = round(p*100, 0))) +
+  geom_bar(stat = "identity", width = 0.5) +
+  geom_text(colour = "white", position = position_stack(vjust = 0.5),
+            size = 2) +
+  scale_fill_viridis("Nombre de partenaires sexuel·les", discrete = "T", 
+                     begin = 0.2, end = 0.8,
+                     option = "A", direction = -1,
+                     guide = guide_legend(reverse = T)) +
+  labs(x = "Âge à la passation", y = "%") +
+  facet_wrap(~factor(sexer, labels = formats$sexer)) +
+  scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+  theme(legend.key.size = unit(0.25, "cm"),
+        text = element_text(size = 9),
+        plot.caption = element_text(hjust = 0),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks.y.left = element_line(color = "black"),
+        axis.line.y.left = element_line(color =  "lightgrey"),
+        axis.line.x.bottom = element_line(color =  "lightgrey"))
+
+tab <- lapply(c(1:4), 
+       function(i) repondant[pcsr != 9, .(p = wtd.mean(h_nbpart_4cl == i, pond)), 
+                             keyby = .(sexer, pcsr)]) %>%
+  rbindlist(idcol = "h_nbpart_4cl")
+
+p2 <- ggplot(tab, aes(x = factor(pcsr, 
+                                 labels = gsub(" ", "\n", formats$pcsr[-6])), 
+                y = p,
+                fill = fct_rev(factor(h_nbpart_4cl, labels = formats$h_nbpart_4cl)),
+                label = round(p*100, 0))) +
+  geom_bar(stat = "identity", width = 0.35) +
+  geom_text(colour = "white", position = position_stack(vjust = 0.5),
+            size = 2) +
+  scale_fill_viridis("Nombre de partenaires sexuel·les", discrete = "T", 
+                     begin = 0.2, end = 0.8,
+                     option = "A", direction = -1,
+                     guide = guide_legend(reverse = T)) +
+  labs(x = "PCS", y = "%") +
+  facet_wrap(~factor(sexer, labels = formats$sexer)) +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) x*100, breaks = seq(0,1,0.2)) +
+  theme(legend.position = "top", 
+        legend.key.size = unit(0.25, "cm"),
+        text = element_text(size = 9),
+        plot.caption = element_text(hjust = 0),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.y = element_text(hjust = 0.8),
+        axis.ticks.x.bottom = element_line(color = "black"),
+        axis.line.x.bottom = element_line(color =  "lightgrey"),
+        axis.line.y.left = element_line(color =  "lightgrey"))
+
+captiongrob <- text_grob(paste(sep = "\n",
+                               "Source : Épic, Ined-Insee (2013-2014). Pourcentages pondérés.",
+                               sprintf("Champ : personnes âgées entre 25 et 65 ans (effectifs non pondérés : %i femmes, %i hommes). Les personnes inactives sont écartées\ndes croisements avec la catégorie socioprofessionnelle par souci d'effectifs (%i femmes et %i hommes).", repondant[sexer == 2, .N], repondant[sexer == 1, .N], repondant[sexer == 2 & pcsr == 9, .N], repondant[sexer == 1 & pcsr == 9, .N]),
+                               "Lecture : 27% des hommes âgés entre 25 et 35 ans à la passation de l'enquête ont déclaré avoir eu dix partenaires sexuel·les ou plus."), just = "left", size = 7, x = 0.05, y = 0.7, lineheight = 1)
+
+gridExtra::grid.arrange(ggarrange(p1, p2, common.legend = T, 
+                                  widths = c(1, 1.3)),
+                        captiongrob, heights = c(5, 1))
+```
+
+
+Chez les femmes, le nombre de partenaires a un effet très similaire à celui des représentations générales sur le couple : plus le nombre de partenaires est élevé, plus les femmes acceptent d'être avec des hommes plus jeunes, et plus elles refusent d'être avec quelqu'un aux opinions politiques différentes (Tableau \@ref(tab:regs-fem)). Le dépassement dans les actes de la réserve sexuelle attendue des femmes serait ainsi le pendant « pratique » des discours séparant conjugalité et sexualité, les deux allant dans le sens d'une certaine émancipation vis à vis de la norme de l'écart d'âge et d'une plus grande sensibilité aux questions politiques, mais toujours sans remise en cause de la norme de l'écart de taille. Les préférences liées à la taille sont au contraire chez les hommes les seules affectées par la variation du nombre de partenaires sexuel·les, le taux de refus d'une relation avec une femme plus grande étant relativement plus élevé chez les hommes ayant déclaré dix partenaires ou plus (Tableau \@ref(tab:regs-hom)). Cette association laisse supposer que les hommes qui se conforment le plus à l'idéal masculin de performance sexuelle, dans leurs discours si ce n'est dans leurs actes, seraient ceux qui accorderaient une plus grande valeur symbolique à la supériorité masculine par la taille au sein du couple.
+
+### Une relative prise de recul chez les femmes au célibat choisi
+
+Un autre indicateur intéressant est celui de la situation conjugale de l'enquêté·e au moment où il ou elle est invité·e à exprimer ses opinions et ses goûts. Si le fait d'être en relation amoureuse importante, de volontairement ne pas l'être, ou de ne pas l'être mais de souhaiter l'être, semble avoir des effets significatifs sur les réponses, l'orientation de ces effets n'est pas facile à interpréter avec les seules informations disponibles dans l'enquête. On note par exemple que les femmes n'étant pas en couple, que ce célibat soit voulu ou non, refusent moins que les autres l'idée d'être avec un homme plus jeune. Plusieurs hypothèses différentes peuvent être avancées sans qu'on puisse pleinement les vérifier. Bien que la vie hors couple soit de plus en plus courante, @bergstromVieHorsCouple2019 ont montré qu'elle représente une situation encore peu acceptée. La conjugalité reste une norme dominante et constamment rappelée à l'esprit des personnes vivant hors couple, que ce soit par leur entourage direct ou par les modèles valorisés dans les œuvres de fiction. On pourrait alors argumenter que le moindre attachement à la norme du conjoint plus âgé chez les femmes célibataires relève d'une sorte de relâchement de nécessité des critères de choix afin de faciliter une mise ou remise en couple, qu'elles affirment ou non leur volonté d'engager une relation au moment de l'enquête. Toutefois, @bergstromVieHorsCouple2019 montrent également que le modèle de vie hors couple, notamment chez les femmes des classes populaires, peut représenter un véritable soulagement et le sentiment d'une autonomie regagnée après plusieurs années de vie conjugale particulièrement inégalitaire. Pour ces femmes qui n'envisagent pas de remise en couple prochaine, les relations « hors normes » par la relative jeunesse ou petitesse du conjoint représentent peut-être un modèle conjugal alternatif plus prometteur en principe. Il est également possible, et peut-être même plus probable, que ces femmes célibataires par choix expriment simplement un plus grand détachement par rapport à ces questions par lesquelles elles se sentent moins directement concernées. Il est à ce titre intéressant de noter qu'elles accepteraient nettement plus facilement d'être avec un homme plus petit qu'elles qu'à la fois les femmes en couple et celles qui souhaiteraient l'être, une tendance similaire s'observant également chez les hommes. De même, ce sont les femmes vivant hors couple qui accordent le moins d'importance aux désaccords politiques au sein du couple. Du côté des hommes, l'hypothèse d'un relâchement des critères de choix dans le but d'ouvrir les possibles semble plus envisageable, puisque les hommes cherchant à se remettre en couple vont davantage que les autres accepter d'être avec une femme plus âgée qu'eux et passer outre les éventuelles différences d'opinions politiques.
+
+
+```{r rec-reg-opi}
+# En couple à la passation
+repondant[, encouple := fcase(is.na(p_satsitu), 1,
+                              p_satsitu == 3, 2,
+                              p_satsitu %in% c(1,2,4,9), 3)]
+formats$encouple <- c("Oui", "Non, mais souhaite l'être", "Non")
+
+# Accepter d'être avec une personne moins diplômée
+repondant[, moindipl := fifelse(r_moindipl_2cl == 9, 
+                                 NA_integer_, r_moindipl_2cl)]
+
+# Accepter d'être avec une personne aux opinions politiques différentes
+repondant[, oppoldif := fifelse(r_oppoldif_2cl == 9, 
+                                NA_integer_, r_oppoldif_2cl)]
+```
+
+```{r regs-opi}
+indevars <- c("Âge à la passation" = "ager_4cl",
+              "PCS à la passation" = "pcsr",
+              "Nombre de partenaires sexuel·les" = "h_nbpart_4cl",
+              "En couple au moment de l'enquête" = "encouple",
+              "Attirance pour le physique" = "r_attiphy",
+              "Représentations sur le couple" = "clust")
+
+
+repondant_reg <- repondant[pcsr != 9]
+formats_reg <- copy(formats)
+formats_reg$pcsr <- formats$pcsr[1:5]
+
+cols <- c("fempluage", "femplugde", "moindipl", "oppoldif")
+repondant_reg[, paste0(cols, "_non") := 
+                lapply(.SD, function(v) fifelse(v == 0, 1, 0)),
+              .SDcols = cols]
+
+repondant_reg[, c(indevars) := 
+                lapply(names(.SD), 
+                       function(x) factor(get(x), labels = formats_reg[[x]])), 
+              .SDcols = indevars]
+
+indelevels <- rbindlist(lapply(indevars, 
+                               function(v) repondant_reg[, .(var = v,
+                                                  level = levels(get(v)))]),
+                               idcol = "group"
+                        )[, term := paste0(var, level)]
+
+repondant_reg[, ager_4cl := relevel(ager_4cl, 4)]
+repondant_reg[, pcsr := relevel(pcsr, 3)]
+repondant_reg[, clust := relevel(clust, 2)]
+
+regs <- lapply(setNames(1:2, formats$sexer), 
+               function(i) sapply(
+                 paste0(c("fempluage", "femplugde", "moindipl", "oppoldif"), "_non"), 
+                 simplify = F,
+                 function(v) glm(paste(v, "~", 
+                                       paste(indevars, collapse = " + ")),
+                                 data = repondant_reg[sexer == i & 
+                                                        r_attiphy != "Ne sait pas"], 
+                                 weights = repondant_reg[sexer == i & 
+                                                        r_attiphy != "Ne sait pas"]$pond,
+                                 family = binomial("logit"))))
+
+regs_sans <- lapply(setNames(1:2, formats$sexer), 
+                    function(i) sapply(
+                      paste0(c("fempluage", "femplugde", "moindipl", "oppoldif"), "_non"), 
+                      simplify = F,
+                      function(v) glm(paste(v, "~", 
+                                            paste(indevars, collapse = " + ")),
+                                      data = repondant_reg[sexer == i & 
+                                                             clust != "Sans avis" &
+                                                             r_attiphy != "Sans avis"], 
+                                      weights = repondant_reg[sexer == i]$pond,
+                                      family = binomial("logit"))))
+```
+
+```{r regs-fem}
+tabreg_fem <- modelsummary(regs$Femme,
+                        group = term ~ model,
+                        output = "data.frame",
+                        vcov = sandwich::vcovHC,
+                        estimate = "{estimate}{stars}",
+                        fmt = function(x) fmt_num(exp(x), 2),
+                        stars = c('*' = .1, "**" = .05, "***" = .01),
+                        statistic = NULL) %>% data.table()
+
+tabregsans_fem <- modelsummary(regs_sans$Femme,
+                        group = term ~ model,
+                        output = "data.frame",
+                        vcov = sandwich::vcovHC,
+                        estimate = "{estimate}{stars}",
+                        fmt = function(x) fmt_num(exp(x), 2),
+                        stars = c('*' = .1, "**" = .05, "***" = .01),
+                        statistic = NULL) %>% data.table()
+
+tab_fem <- merge(indelevels, tabreg_fem, 
+                 all.x = T, by = "term", sort = FALSE,
+      )[, `:=`(var = NULL, term = NULL, part = NULL, statistic = NULL)
+        ][, setnames(.SD, c("group", " ", 
+                            "{\\parbox{2cm}{\\center Femme plus âgée}}", 
+                            "{\\parbox{2cm}{\\center Femme plus grande}}",
+                            "{\\parbox{2cm}{\\center Qqn. moins dipl.}}",
+                            "{\\parbox{2cm}{\\center Opinions pol. diff.}}"))
+          ][, lapply(.SD, function(x) fifelse(is.na(x), "{réf.}", x))]
+
+
+cols <- paste0(c("fempluage", "femplugde", "moindipl", "oppoldif"), "_non")
+extraline <- rbind(
+  repondant_reg[sexer == 2, lapply(.SD, function(v) 
+    sprintf("{%i}", sum(!is.na(v)))), .SDcols = cols],
+  repondant_reg[sexer == 2, lapply(.SD, function(v) 
+    pct_latex(wtd.mean(v == 1, pond))), .SDcols = cols]) %>%
+  cbind(c("Effectifs de répondant·es", 
+          "Pourcentages de réponses négatives"), .)
+
+rbind(tab_fem[, -1], extraline, use.names = F) %>% 
+  kbl(longtable = F, booktabs = T, format = "latex", escape = F,
+      caption = "Régressions logistiques dichotomiques (odds ratio) sur le fait de refuser certaines caractéristiques dans ses relations amoureuses - Femmes",
+      align = c("l", rep("d", 4))) %>% 
+  kable_styling(position ="center",
+                latex_options = c("hold_position")) %>%
+  row_spec(24, hline_after = T) %>%
+  pack_rows(index = table(fct_inorder(tab_fem$group)),
+            indent = F) %>%
+  footnote(general = c("Source : Ined-Insee, Épic, 2013-2014. Données pondérées (sauf présentations des effectifs).",
+                       "Champ : femmes âgées entre 25 et 65 ans. Les personnes inactives ne sont pas prise en compte par souci d'effectifs. Les personnes n'ayant pas répondu aux questions considérées sont également écartées.",
+                       "Lecture : toutes les variables du modèle étant égales par ailleurs, les femmes âgées entre 25 et 35 ans ont 2,23 fois plus de chance que les femmes âgées entre 55 et 65 ans de refuser d'être plus âgée de 5 ans ou plus qu'un conjoint plutôt que de l'accepter.", 
+                       "Seuils de significativité : p < 0,1 *; p < 0,05 **, p < 0,01 ***."), 
+           general_title = "", escape = F, threeparttable = T)
+```
+
+```{r regs-hom}
+tabreg_hom <- modelsummary(regs$Homme,
+                        group = term ~ model,
+                        output = "data.frame",
+                        vcov = sandwich::vcovHC,
+                        estimate = "{estimate}{stars}",
+                        fmt = function(x) fmt_num(exp(x), 2),
+                        stars = c('*' = .1, "**" = .05, "***" = .01),
+                        statistic = NULL) %>% data.table()
+
+tab_hom <- merge(indelevels, tabreg_hom, 
+                 all.x = T, by = "term", sort = FALSE,
+      )[, `:=`(var = NULL, term = NULL, part = NULL, statistic = NULL)
+        ][, setnames(.SD, c("group", " ", 
+                            "{\\parbox{2cm}{\\center Femme plus âgée}}", 
+                            "{\\parbox{2cm}{\\center Femme plus grande}}",
+                            "{\\parbox{2cm}{\\center Autre moins dipl.}}",
+                            "{\\parbox{2cm}{\\center Opinions pol. diff.}}"))
+          ][, lapply(.SD, function(x) fifelse(is.na(x), "{réf.}", x))]
+
+cols <- paste0(c("fempluage", "femplugde", "moindipl", "oppoldif"), "_non")
+extraline <- rbind(
+  repondant_reg[sexer == 1, lapply(.SD, function(v) 
+    sprintf("{%i}", sum(!is.na(v)))), .SDcols = cols],
+  repondant_reg[sexer == 1, lapply(.SD, function(v) 
+    pct_latex(wtd.mean(v == 1, pond))), .SDcols = cols]) %>%
+  cbind(c("Effectifs de répondant·es", 
+          "Pourcentages de réponses négatives"), .)
+
+rbind(tab_hom[, -1], extraline, use.names = F) %>% 
+  kbl(longtable = F, booktabs = T, format = "latex", escape = F,
+      caption = "Régressions logistiques dichotomiques (odds ratio) sur le fait de refuser certaines caractéristiques dans ses relations amoureuses - Hommes",
+      align = c("l", rep("d", 4))) %>% 
+  kable_styling(position ="center",
+                latex_options = c("hold_position")) %>%
+    row_spec(24, hline_after = T) %>%
+  pack_rows(index = table(fct_inorder(tab_hom$group)),
+            indent = F) %>%
+  footnote(general = c("Source : Ined-Insee, Épic, 2013-2014. Données pondérées (sauf présentation des effectifs).",
+                       "Champ : hommes âgés entre 25 et 65 ans. Les personnes inactives ne sont pas prise en compte par souci d'effectifs. Les personnes n'ayant pas répondu aux questions considérées sont également écartées.",
+                       "Lecture : toutes les variables du modèle étant égales par ailleurs, les hommes âgés entre 25 et 35 ans ont 0,68 fois plus de chance (soit 1/0,68 = 1,47 fois moins de chance) que les hommes âgés entre 55 et 65 ans de refuser d'être avec une femme plus âgée qu'eux de 5 ans ou plus plutôt que de l'accepter.", 
+                       "Seuils de significativité : p < 0,1 *; p < 0,05 **, p < 0,01 ***."), 
+           general_title = "", escape = F, threeparttable = T)
+```
+
+\clearpage
+
+Ce deuxième chapitre a permis de préciser la structuration des goûts amoureux d'âge et de taille qui persistent depuis les années 1980. 
+
+Chez les femmes, nous avons constaté que ces deux types de préférences ne relèvent pas toujours des mêmes logiques. Comme discuté dans le premier chapitre, le désir d'être avec un homme plus âgé est plus marqué chez les enquêtées jeunes et les enquêtées de classes populaires. Une fois ces tendances prises en compte, on constate que ce marqueur de domination masculine est davantage plébiscité par les femmes en couple au moment de l'enquête, et par les femmes dont les pratiques et les représentations semblent les plus conformes à l'injonction genrée de réserve sexuelle. La préférence pour les hommes plus grands apparaît au contraire commune à toutes les classes et à toutes les générations, et sans lien apparent avec les représentations sur le couple ou le nombre de partenaires. Le fait de ne pas accorder de l'importance à l'attirance physique est cependant fortement associé à une plus grande acceptation d'un écart de taille « inhabituel », ce qui laisse penser que ce goût est en partie déterminé par des considérations esthétiques. On note enfin que les caractéristiques liées à une plus grande prise de recul par rapport à l'écart d'âge sont également associées à une moindre tolérance des divergences d'opinions politiques au sein du couple. Cette tendance ouvre des pistes de réflexions sur d'éventuels liens entre politisation de l'intime, émancipation de la norme féminine de réserve sexuelle, et formation des goûts amoureux. 
+
+Chez les hommes, peu de variables permettent d'expliquer des variations dans les réponses. On note toutefois que ce sont les hommes les plus âgés et ceux à la vision la plus conservatrice du couple et de la sexualité qui refusent le plus d'être avec une femme plus âgée qu'eux. Comme pour les femmes, l'importance accordée à l'attirance physique pour quelqu'un est associée à une adhésion plus forte à la norme de l'écart de taille. Mais cette adhésion est également renforcée par la déclaration d'un grand nombre de partenaires sexuel·les, tandis que le nombre de partenaires n'a pas d'impact sur la propension des femmes à refuser d'être avec un homme plus petit. En d'autres termes, la conformité (réelle ou déclarée) aux injonctions de genre en termes de sexualité s'associe chez les hommes à un attachement accru au marqueur de domination masculine que représente la différence de taille, tandis que la remise en cause de ces injonctions de genre chez les femmes ne s'accompagne pas d'une remise en cause de la norme liée à l'écart de taille. Il semble que cette norme soit plus imperméable que l'écart d'âge aux discours visant à affaiblir les inégalités de genre dans le cadre conjugal, peut-être parce qu'elle relève davantage aux yeux des concerné·es d'un enjeu esthétique et d'une complémentarité « naturelle » que d'un enjeu social.
+
+
